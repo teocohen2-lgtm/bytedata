@@ -1,9 +1,114 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ByteData AI Dashboard</title>
 
     <style>
+      /* =====================================
+   RESPONSIVE MOBILE + TABLET
+===================================== */
+      @media screen and (max-width: 768px) {
+        body {
+          overflow: auto;
+        }
+
+        .container {
+          flex-direction: column;
+          height: auto;
+        }
+
+        .sidebar {
+          width: 100%;
+
+          padding: 15px;
+
+          display: flex;
+
+          flex-direction: column;
+        }
+
+        .logo-container {
+          margin-bottom: 15px;
+        }
+
+        .logo-container img {
+          width: 100px;
+        }
+
+        .sub-logo {
+          font-size: 14px;
+        }
+
+        .stats {
+          padding: 12px;
+
+          margin-bottom: 15px;
+        }
+
+        .stats p {
+          font-size: 24px;
+        }
+
+        /* BUTTONS HORIZONTAL */
+
+        .sidebar {
+          gap: 10px;
+        }
+
+        .sidebar button {
+          flex: 1;
+
+          margin-top: 0;
+
+          min-height: 42px;
+
+          font-size: 14px;
+        }
+
+        .button-row {
+          display: flex;
+
+          gap: 8px;
+        }
+
+        .main {
+          flex-direction: column;
+        }
+
+        .review-panel {
+          padding: 15px;
+        }
+
+        .review-header h2 {
+          font-size: 24px;
+        }
+
+        .field-card {
+          flex-direction: column;
+
+          align-items: stretch;
+
+          gap: 8px;
+        }
+
+        .field-title {
+          width: 100%;
+        }
+
+        .json-panel {
+          width: 100%;
+
+          min-height: 200px;
+        }
+
+        .verify-btn {
+          width: 100%;
+
+          min-height: 50px;
+        }
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -13,7 +118,7 @@
       body {
         font-family: Arial;
         background: #f3f4f6;
-        overflow: hidden;
+        overflow-x: hidden;
       }
 
       .container {
