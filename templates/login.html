@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ByteData Login</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        height: 100vh;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        background: #020617;
+
+        font-family: Arial;
+      }
+
+      .login-card {
+        width: 420px;
+
+        background: #0f172a;
+
+        padding: 40px;
+
+        border-radius: 20px;
+
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+
+        text-align: center;
+      }
+
+      .logo {
+        width: 170px;
+
+        margin-bottom: 15px;
+      }
+
+      .title {
+        color: white;
+
+        font-size: 28px;
+
+        font-weight: bold;
+
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #94a3b8;
+
+        margin-bottom: 35px;
+      }
+
+      input {
+        width: 100%;
+
+        padding: 16px;
+
+        margin-bottom: 18px;
+
+        border: none;
+
+        border-radius: 12px;
+
+        background: #1e293b;
+
+        color: white;
+
+        font-size: 15px;
+      }
+
+      input:focus {
+        outline: none;
+
+        border: 1px solid #00ff88;
+      }
+
+      button {
+        width: 100%;
+
+        padding: 16px;
+
+        border: none;
+
+        border-radius: 12px;
+
+        background: #00ff88;
+
+        color: black;
+
+        font-size: 16px;
+
+        font-weight: bold;
+
+        cursor: pointer;
+      }
+
+      .error {
+        margin-top: 18px;
+
+        color: #ff4d4d;
+      }
+
+      .success {
+        margin-top: 18px;
+
+        color: #00ff88;
+      }
+
+      .loader {
+        display: none;
+
+        margin-top: 20px;
+      }
+
+      .spinner {
+        width: 45px;
+        height: 45px;
+
+        border: 5px solid #334155;
+        border-top: 5px solid #00ff88;
+
+        border-radius: 50%;
+
+        animation: spin 1s linear infinite;
+
+        margin: auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="login-card">
+      <img src="/static/logo.png" class="logo" />
+
+      <div class="title">ByteData</div>
+
+      <div class="subtitle">AI Dataset Operations Platform</div>
+
+      <input type="text" id="username" placeholder="Username" />
+
+      <input type="password" id="password" placeholder="Password" />
+
+      <button onclick="loginUser()">Login</button>
+
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+      </div>
+
+      <div id="message"></div>
+    </div>
+
+    <script>
+      async function loginUser() {
+        const username = document.getElementById("username").value;
+
+        const password = document.getElementById("password").value;
+
+        const message = document.getElementById("message");
+
+        const loader = document.getElementById("loader");
+
+        message.innerHTML = "";
+
+        loader.style.display = "block";
+
+        try {
+          const res = await fetch(
+            "/login-user",
+
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json",
+              },
+
+              body: JSON.stringify({
+                username,
+                password,
+              }),
+            }
+          );
+
+          const result = await res.json();
+
+          if (result.status === "success") {
+            message.innerHTML = `
+
+                <div class="success">
+
+                    ${result.message}
+
+                </div>
+
+            `;
+
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 1000);
+          } else {
+            message.innerHTML = `
+
+                <div class="error">
+
+                    ${result.message}
+
+                </div>
+
+            `;
+          }
+        } catch (error) {
+          message.innerHTML = `
+
+            <div class="error">
+
+                Server Error
+
+            </div>
+
+        `;
+        } finally {
+          loader.style.display = "none";
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ByteData AI Dashboard</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial;
+        background: #f3f4f6;
+        overflow: hidden;
+      }
+
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+
+      .sidebar {
+        width: 280px;
+
+        background: #0f172a;
+
+        color: white;
+
+        padding: 25px;
+
+        display: flex;
+
+        flex-direction: column;
+      }
+
+      .logo-container {
+        text-align: center;
+
+        margin-bottom: 35px;
+      }
+
+      .logo-container img {
+        width: 170px;
+      }
+
+      .sub-logo {
+        color: #94a3b8;
+
+        margin-top: 10px;
+      }
+
+      .stats {
+        background: #1e293b;
+
+        padding: 18px;
+
+        border-radius: 14px;
+
+        margin-bottom: 25px;
+      }
+
+      .stats h3 {
+        color: #94a3b8;
+
+        margin-bottom: 10px;
+      }
+
+      .stats p {
+        font-size: 34px;
+
+        color: #00ff88;
+
+        font-weight: bold;
+      }
+
+      .sidebar button {
+        width: 100%;
+
+        padding: 15px;
+
+        border: none;
+
+        border-radius: 12px;
+
+        margin-top: 15px;
+
+        cursor: pointer;
+
+        font-size: 15px;
+
+        font-weight: bold;
+      }
+
+      .fetch-btn {
+        background: #00ff88;
+      }
+
+      .export-btn {
+        background: #2563eb;
+        color: white;
+      }
+
+      .logout-btn {
+        background: #ef4444;
+        color: white;
+      }
+
+      .main {
+        flex: 1;
+
+        display: flex;
+      }
+
+      .review-panel {
+        flex: 1;
+
+        padding: 30px;
+
+        overflow: auto;
+      }
+
+      .review-header {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        margin-bottom: 25px;
+      }
+
+      .review-header h2 {
+        font-size: 30px;
+      }
+
+      .badge {
+        background: #dcfce7;
+
+        color: #166534;
+
+        padding: 10px 16px;
+
+        border-radius: 30px;
+
+        font-size: 13px;
+
+        font-weight: bold;
+      }
+
+      .error-box {
+        background: #fee2e2;
+
+        color: #991b1b;
+
+        padding: 15px;
+
+        border-radius: 12px;
+
+        margin-bottom: 20px;
+
+        display: none;
+      }
+
+      .success-box {
+        background: #dcfce7;
+
+        color: #166534;
+
+        padding: 15px;
+
+        border-radius: 12px;
+
+        margin-bottom: 20px;
+
+        display: none;
+      }
+
+      .field-card {
+        background: white;
+
+        border-radius: 16px;
+
+        padding: 18px;
+
+        margin-bottom: 16px;
+
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 25px;
+      }
+
+      .field-title {
+        width: 240px;
+
+        font-weight: bold;
+
+        text-transform: capitalize;
+      }
+
+      .field-value {
+        flex: 1;
+      }
+
+      .field-value input {
+        width: 100%;
+
+        padding: 14px;
+
+        border: 1px solid #d1d5db;
+
+        border-radius: 10px;
+
+        background: #f9fafb;
+      }
+
+      .field-value input.error {
+        border: 2px solid #ef4444;
+
+        background: #fef2f2;
+      }
+
+      .actions {
+        margin-top: 25px;
+      }
+
+      .verify-btn {
+        background: #00ff88;
+
+        padding: 15px 25px;
+
+        border: none;
+
+        border-radius: 12px;
+
+        cursor: pointer;
+
+        font-weight: bold;
+      }
+
+      .json-panel {
+        width: 420px;
+
+        background: #020617;
+
+        color: #00ff88;
+
+        padding: 25px;
+
+        overflow: auto;
+      }
+
+      .json-panel h2 {
+        color: white;
+
+        margin-bottom: 20px;
+      }
+
+      pre {
+        white-space: pre-wrap;
+
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="logo-container">
+          <img src="/static/logo.png" />
+
+          <div class="sub-logo">AI Dataset Operations</div>
+        </div>
+
+        <div class="stats">
+          <h3>Verified Rows</h3>
+
+          <p id="verifiedCount">0</p>
+        </div>
+
+        <button class="fetch-btn" onclick="fetchNextRow()">
+          Fetch Dataset
+        </button>
+
+        <button class="export-btn" onclick="exportExcel()">Export Excel</button>
+
+        <button class="logout-btn" onclick="logoutUser()">Logout</button>
+      </div>
+
+      <div class="main">
+        <div class="review-panel">
+          <div class="review-header">
+            <h2>Dataset Review</h2>
+
+            <div class="badge">Ready For Verification</div>
+          </div>
+
+          <div class="error-box" id="errorBox"></div>
+
+          <div class="success-box" id="successBox"></div>
+
+          <div id="reviewContainer"></div>
+
+          <div class="actions">
+            <button class="verify-btn" onclick="verifyRow()">
+              Save & Verify
+            </button>
+          </div>
+        </div>
+
+        <div class="json-panel">
+          <h2>JSON Preview</h2>
+
+          <pre id="jsonPreview">
+
+No Data Loaded
+
+            </pre
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentRow = {};
+
+      let verifiedCount = 0;
+
+      const reviewContainer = document.getElementById("reviewContainer");
+
+      const jsonPreview = document.getElementById("jsonPreview");
+
+      const verifiedCounter = document.getElementById("verifiedCount");
+
+      const errorBox = document.getElementById("errorBox");
+
+      const successBox = document.getElementById("successBox");
+
+      // =====================================
+      // FETCH NEXT ROW
+      // =====================================
+
+      async function fetchNextRow() {
+        errorBox.style.display = "none";
+
+        successBox.style.display = "none";
+
+        const res = await fetch("/fetch-next-row");
+
+        const result = await res.json();
+
+        if (result.status === "finished") {
+          reviewContainer.innerHTML = "";
+
+          jsonPreview.textContent = "No More Assigned Rows";
+
+          alert("No More Assigned Rows");
+
+          return;
+        }
+
+        if (result.status === "error") {
+          alert(result.message);
+
+          return;
+        }
+
+        currentRow = result.row;
+
+        renderReviewForm(currentRow);
+
+        updateJSON();
+      }
+
+      // =====================================
+      // RENDER FORM
+      // =====================================
+
+      function renderReviewForm(row) {
+        reviewContainer.innerHTML = "";
+
+        Object.keys(row).forEach((key) => {
+          reviewContainer.innerHTML += `
+
+            <div class="field-card">
+
+                <div class="field-title">
+
+                    ${key.replaceAll("_", " ")}
+
+                </div>
+
+                <div class="field-value">
+
+                    <input
+
+                        id="field_${key}"
+
+                        value="${row[key]}"
+
+                        onchange="
+                            updateField(
+                                '${key}',
+                                this.value
+                            )
+                        "
+
+                    >
+
+                </div>
+
+            </div>
+
+        `;
+        });
+      }
+
+      // =====================================
+      // UPDATE FIELD
+      // =====================================
+
+      function updateField(key, value) {
+        currentRow[key] = value;
+
+        updateJSON();
+      }
+
+      // =====================================
+      // UPDATE JSON
+      // =====================================
+
+      function updateJSON() {
+        jsonPreview.textContent = JSON.stringify(currentRow, null, 4);
+      }
+
+      // =====================================
+      // VALIDATE
+      // =====================================
+
+      function validateData() {
+        let errors = [];
+
+        document.querySelectorAll("input").forEach((input) => {
+          input.classList.remove("error");
+        });
+
+        Object.keys(currentRow).forEach((key) => {
+          const value = String(currentRow[key]).trim();
+
+          const input = document.getElementById(`field_${key}`);
+
+          if (value === "") {
+            errors.push(`${key} is empty`);
+
+            input.classList.add("error");
+          }
+
+          if (value.includes("#ERROR")) {
+            errors.push(`${key} contains #ERROR`);
+
+            input.classList.add("error");
+          }
+
+          if (value.toLowerCase() === "unknown") {
+            errors.push(`${key} contains unknown value`);
+
+            input.classList.add("error");
+          }
+        });
+
+        return errors;
+      }
+
+      // =====================================
+      // VERIFY ROW
+      // =====================================
+
+      async function verifyRow() {
+        errorBox.style.display = "none";
+
+        successBox.style.display = "none";
+
+        const validationErrors = validateData();
+
+        if (validationErrors.length > 0) {
+          errorBox.style.display = "block";
+
+          errorBox.innerHTML = `
+
+            <b>
+                Validation Errors:
+            </b>
+
+            <br><br>
+
+            ${validationErrors.join("<br>")}
+
+        `;
+
+          return;
+        }
+
+        const res = await fetch(
+          "/save-verified",
+
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify(currentRow),
+          }
+        );
+
+        const result = await res.json();
+
+        if (result.status === "success") {
+          verifiedCount++;
+
+          verifiedCounter.innerText = verifiedCount;
+
+          successBox.style.display = "block";
+
+          successBox.innerHTML = "Data Verified Successfully";
+
+          // FETCH NEXT ROW
+
+          setTimeout(async () => {
+            await fetchNextRow();
+          }, 700);
+        }
+      }
+
+      // =====================================
+      // EXPORT
+      // =====================================
+
+      function exportExcel() {
+        window.location.href = "/export-excel";
+      }
+
+      // =====================================
+      // LOGOUT
+      // =====================================
+
+      function logoutUser() {
+        window.location.href = "/logout";
+      }
+    </script>
+  </body>
+</html>
