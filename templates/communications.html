@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Communications Center</title>
+
+    <style>
+      body {
+        background: #0b1220;
+        color: white;
+        font-family: Arial;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .header {
+        margin-bottom: 20px;
+      }
+
+      .ticket {
+        background: #111827;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+      }
+
+      .ticket h3 {
+        margin: 0 0 10px 0;
+      }
+
+      .open-btn {
+        background: #00ff88;
+        color: black;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+      }
+
+      .modal-content {
+        width: 90%;
+        max-width: 700px;
+        background: #111827;
+        margin: 50px auto;
+        padding: 25px;
+        border-radius: 15px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 120px;
+        background: #1f2937;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+
+      .reply-btn {
+        background: #00ff88;
+      }
+
+      .close-btn {
+        background: #ef4444;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">
+      <h1>💬 Communications Center</h1>
+    </div>
+
+    <div id="ticketList">Loading...</div>
+
+    <div id="ticketModal" class="modal">
+      <div class="modal-content">
+        <h2 id="companyName"></h2>
+
+        <br />
+
+        <p>
+          <b>Subject:</b>
+          <span id="subject"></span>
+        </p>
+
+        <br />
+
+        <p>
+          <b>Customer Message:</b>
+        </p>
+
+        <br />
+
+        <div id="customerMessage"></div>
+
+        <br />
+
+        <textarea id="agentReply" placeholder="Type reply here..."></textarea>
+
+        <br /><br />
+
+        <button class="btn reply-btn" onclick="sendReply()">Send Reply</button>
+
+        <button class="btn close-btn" onclick="closeTicket()">
+          Close Ticket
+        </button>
+
+        <button class="btn" onclick="hideModal()">Cancel</button>
+      </div>
+    </div>
+
+    <script>
+      let tickets = [];
+      let selectedTicket = null;
+
+      async function loadTickets() {
+        const res = await fetch("/communications-data");
+
+        tickets = await res.json();
+
+        let html = "";
+
+        tickets.forEach((ticket, index) => {
+          html += `
+
+        <div class="ticket">
+
+            <h3>
+            ${ticket.company_name}
+            </h3>
+
+            <p>
+            ${ticket.subject}
+            </p>
+
+            <br>
+
+            <button
+            class="open-btn"
+            onclick="openTicket(${index})"
+            >
+            Open Ticket
+            </button>
+
+        </div>
+
+        `;
+        });
+
+        document.getElementById("ticketList").innerHTML = html;
+      }
+
+      function openTicket(index) {
+        selectedTicket = tickets[index];
+
+        document.getElementById("companyName").innerText =
+          selectedTicket.company_name;
+
+        document.getElementById("subject").innerText = selectedTicket.subject;
+
+        document.getElementById("customerMessage").innerText =
+          selectedTicket.customer_message;
+
+        document.getElementById("ticketModal").style.display = "block";
+      }
+
+      function hideModal() {
+        document.getElementById("ticketModal").style.display = "none";
+      }
+
+      function sendReply() {
+        alert("We will update issue in next 24 hr");
+      }
+
+      function closeTicket() {
+        alert("We Update Status Closed in 24 hr");
+      }
+
+      loadTickets();
+    </script>
+  </body>
+</html>

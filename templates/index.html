@@ -395,6 +395,7 @@
 
         <button class="export-btn" onclick="exportExcel()">Export Excel</button>
 
+        <button class="dashboard-btn" onclick="goDashboard()">Dashboard</button>
         <button class="logout-btn" onclick="logoutUser()">Logout</button>
       </div>
 
@@ -658,6 +659,10 @@ No Data Loaded
 
       function logoutUser() {
         window.location.href = "/logout";
+      }
+
+      function goDashboard() {
+        window.location.href = "/dashboard";
       }
     </script>
   </body>

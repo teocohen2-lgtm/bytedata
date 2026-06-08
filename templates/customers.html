@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteData Customers</title>
+
+    <style>
+
+.modal-content h2{
+    color:white;
+}
+
+.modal-content p{
+    color:#e5e7eb;
+}
+
+.modal-content label{
+    color:#d1d5db;
+    font-weight:600;
+}
+
+.kpi-row{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin:20px 0;
+}
+
+.kpi-card{
+background:#111827;
+padding:20px;
+border-radius:16px;
+}
+
+.kpi-card h3{
+font-size:14px;
+color:#9ca3af;
+}
+
+.kpi-card p{
+font-size:30px;
+font-weight:bold;
+margin-top:10px;
+}
+
+      .modal {
+        display: none;
+
+        position: fixed;
+
+        top: 0;
+
+        left: 0;
+
+        width: 100vw;
+
+        height: 100vh;
+
+        background: rgba(0, 0, 0, 0.5);
+
+        z-index: 9999;
+
+        justify-content: center;
+
+        align-items: center;
+      }
+
+      .modal-content {
+        background:#0f172a;
+color:white;
+
+width:95%;
+max-width:750px;
+
+padding:30px;
+
+border-radius:24px;
+
+border:1px solid #1f2937;
+
+box-shadow:
+0 25px 50px rgba(0,0,0,.5);
+      }
+
+      .success-btn {
+        background: #00ff88;
+
+        color: black;
+
+        border: none;
+
+        padding: 10px 15px;
+
+        border-radius: 8px;
+
+        cursor: pointer;
+
+        margin-right: 10px;
+      }
+
+      .warning-btn {
+        background: #ef4444;
+
+        color: white;
+
+        border: none;
+
+        padding: 10px 15px;
+
+        border-radius: 8px;
+
+        cursor: pointer;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        background: #0b1220;
+        color: white;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 260px;
+        background: #0f172a;
+        color: white;
+        padding: 25px;
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .logo img {
+        width: 150px;
+      }
+
+      .logo p {
+        color: #94a3b8;
+        margin-top: 10px;
+      }
+
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .menu a {
+        text-decoration: none;
+        color: white;
+        background: #1e293b;
+        padding: 14px;
+        border-radius: 12px;
+      }
+
+      .menu a.active {
+        background: #00ff88;
+        color: black;
+        font-weight: bold;
+      }
+
+      .main {
+        flex: 1;
+        padding: 25px;
+        background: #0b1220;
+      }
+
+      .header {
+        margin-bottom: 25px;
+      }
+
+      .header h1 {
+        font-size: 32px;
+      }
+
+      .header p {
+        color: #64748b;
+        margin-top: 5px;
+      }
+
+      .search-box {
+        margin-bottom: 20px;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        background:#111827;
+        color:white;
+        border:none;
+      }
+
+      .table-card {
+        background: #111827;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        background: #1f2937;
+        padding: 15px;
+        text-align: left;
+        color:white
+      }
+
+      td {
+        padding: 15px;
+        border-top: 1px solid #e5e7eb;
+        color:white;
+      }
+
+      .status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .active-status {
+        background:#14532d;
+        color:#4ade80;
+      }
+
+      .due-status {
+        background:#78350f;
+        color:#fbbf24;
+      }
+
+      .overdue-status {
+        background:#7f1d1d;
+        color:#f87171;
+      }
+
+      .action-btn {
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        background:#00ff88;
+        color:black;
+        font-weight:bold;
+      }
+
+      .action-btn:hover {
+        opacity: 0.9;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          width: 100%;
+        }
+
+        .main {
+          padding: 15px;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="logo">
+          <img src="/static/logo.png" />
+          <p>ByteData CRM</p>
+        </div>
+
+        <div class="menu">
+          <a href="/dashboard"> 📊 Dashboard </a>
+
+          <a href="/customers" class="active"> 👥 Customers </a>
+
+          <a href="/"> ✅ Data Verification </a>
+
+          <a href="/logout"> 🚪 Logout </a>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="header">
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <h3>Total Customers</h3>
+              <p id="totalCustomers">0</p>
+            </div>
+
+            <div class="kpi-card">
+              <h3>Active</h3>
+              <p id="activeCustomers">0</p>
+            </div>
+
+            <div class="kpi-card">
+              <h3>Due</h3>
+              <p id="dueCustomers">0</p>
+            </div>
+
+            <div class="kpi-card">
+              <h3>Overdue</h3>
+              <p id="overdueCustomers">0</p>
+            </div>
+          </div>
+            <h1>Customers & Collections</h1>
+
+            <p>Manage subscriptions and collections</p>
+          </div>
+
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchBox"
+              placeholder="Search Company..."
+              onkeyup="filterTable()"
+            />
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Country</th>
+                  <th>Plan</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Assigned</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody id="customerTable">
+                <tr>
+                  <td colspan="7">Loading Customers...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        let allCustomers = [];
+
+        
+
+        function openCustomerModal(index) {
+          console.log("VIEW CLICKED", index);
+
+          const customer = allCustomers[index];
+
+          const status = customer.status.toLowerCase();
+
+          let html = `
+
+<div style="
+padding:20px;
+background:#1f2937;
+border-radius:12px;
+margin-bottom:15px;
+border:1px solid #374151;
+">
+
+<h2 style="
+margin-bottom:10px;
+">
+${customer.company_name}
+</h2>
+
+<span style="
+background:${
+    status === 'active'
+      ? '#14532d'
+      : status === 'overdue'
+      ? '#7f1d1d'
+      : '#78350f'
+};
+padding:8px 16px;
+border-radius:20px;
+font-weight:bold;
+color:white;
+display:inline-block;
+">
+${customer.status}
+</span>
+
+</div>
+
+<br>
+
+<p>
+<b>Amount:</b>
+$${customer.subscription_amount}
+</p>
+
+`;
+
+          if (status === "active") {
+            html += `
+
+    <h3 style="color:green">
+
+    No Action Required
+
+    </h3>
+
+    `;
+          } else if (
+            // status.includes("due")
+            status === "due today" ||
+            status === "due soon"
+          ) {
+            html += `
+
+    <button
+    class="success-btn"
+    onclick="alert('Reminder Sent Successfully')"
+    >
+
+    Send Reminder
+
+    </button>
+
+    <button
+    class="success-btn"
+    onclick="alert('Payment Link Sent Successfully')"
+    >
+
+    Send Payment Link
+
+    </button>
+
+    `;
+          } else if (
+            // status.includes("overdue")
+            status === "overdue"
+          ) {
+            const baseAmount = Number(customer.subscription_amount);
+
+            html += `
+
+    <div style="
+       background:#1f2937;
+        padding:20px;
+        border-radius:12px;
+    margin-top:15px;
+border:1px solid #374151;
+color:white;
+    ">
+
+        <h3 style="
+            color:#f87171;
+margin-bottom:15px;
+font-size:24px;
+        ">
+            Overdue Account
+        </h3>
+
+        <p>
+            <b>Subscription Amount:</b>
+            $${baseAmount}
+        </p>
+
+        <br>
+
+        <label>
+            <b>Penalty Amount</b>
+        </label>
+
+        <br>
+
+        <input
+            id="penaltyInput"
+            type="number"
+            value="0"
+            style="
+              width:100%;
+padding:14px;
+background:#111827;
+color:white;
+border:1px solid #374151;
+border-radius:10px;
+            "
+            oninput="
+                updateTotal(
+                    ${baseAmount}
+                )
+            "
+        >
+
+        <br><br>
+
+        <p>
+
+            <b>Total Due:</b>
+
+            $<span id="totalDue">
+
+                ${baseAmount}
+
+            </span>
+
+        </p>
+
+        <br>
+
+        <textarea
+
+            placeholder="Notes"
+
+            style="
+               width:100%;
+height:120px;
+padding:14px;
+background:#111827;
+color:white;
+border:1px solid #374151;
+border-radius:10px;
+resize:none;
+            "
+
+        ></textarea>
+
+        <br><br>
+
+        <button
+            class="success-btn"
+            onclick="
+                alert(
+                    'Reminder Sent Successfully'
+                )
+            "
+        >
+            Send Reminder
+        </button>
+
+        <button
+            class="warning-btn"
+            onclick="
+                alert(
+                    'Payment Link Sent Successfully'
+                )
+            "
+        >
+            Send Payment Link
+        </button>
+
+        <button
+            class="action-btn"
+            onclick="
+                alert(
+                    'Marked Paid'
+                )
+            "
+        >
+            Mark Paid
+        </button>
+
+    </div>
+    `;
+          }
+
+          document.getElementById("modalBody").innerHTML = html;
+
+          document.getElementById("customerModal").style.display = "flex";
+        }
+
+        function closeCustomerModal() {
+          document.getElementById("customerModal").style.display = "none";
+        }
+
+        function updateTotal(baseAmount) {
+          const penalty = Number(
+            document.getElementById("penaltyInput").value || 0
+          );
+
+          document.getElementById("totalDue").innerText = baseAmount + penalty;
+        }
+
+        // async function loadCustomers() {
+        //   const res = await fetch("/customers-data");
+
+        //   const data = await res.json();
+
+        //   allCustomers = data;
+
+        //   renderTable(data);
+        // }
+
+        async function loadCustomers() {
+
+const res = await fetch("/customers-data");
+
+const data = await res.json();
+
+allCustomers = data;
+
+document.getElementById("totalCustomers").innerText =
+    data.length;
+
+document.getElementById("activeCustomers").innerText =
+    data.filter(
+        x => (x.status || "").toLowerCase() === "active"
+    ).length;
+
+document.getElementById("dueCustomers").innerText =
+    data.filter(
+        x =>
+            (x.status || "").toLowerCase().includes("due") &&
+            !(x.status || "").toLowerCase().includes("overdue")
+    ).length;
+
+document.getElementById("overdueCustomers").innerText =
+    data.filter(
+        x => (x.status || "").toLowerCase().includes("overdue")
+    ).length;
+
+renderTable(data);
+}
+
+        function renderTable(customers) {
+          let rows = "";
+
+          customers.forEach((customer, index) => {
+            let statusClass = "active-status";
+
+            if (customer.status.toLowerCase().includes("overdue")) {
+              statusClass = "overdue-status";
+            } else if (customer.status.toLowerCase().includes("due")) {
+              statusClass = "due-status";
+            }
+
+            rows += `
+<tr>
+
+<td>${customer.company_name}</td>
+
+<td>${customer.country}</td>
+
+<td>${customer.subscription_plan}</td>
+
+<td>$${customer.subscription_amount}</td>
+
+<td>
+
+<span class="status ${statusClass}">
+${customer.status}
+</span>
+
+</td>
+
+<td>${customer.assigned_to}</td>
+
+<td>
+
+<button
+class="action-btn"
+onclick="openCustomerModal(${index})"
+>
+
+View
+
+</button>
+
+</td>
+
+</tr>
+
+        `;
+          });
+
+          document.getElementById("customerTable").innerHTML = rows;
+        }
+
+        function filterTable() {
+          const search = document
+            .getElementById("searchBox")
+            .value.toLowerCase();
+
+          const filtered = allCustomers.filter((c) =>
+            c.company_name.toLowerCase().includes(search)
+          );
+
+          renderTable(filtered);
+        }
+
+        loadCustomers();
+      </script>
+    </div>
+
+    <div id="customerModal" class="modal">
+      <div class="modal-content">
+        <div style="margin-bottom: 10px;">
+        <h2>Customer Details</h2>
+       </div>
+        
+        <div id="modalBody"></div>
+
+        <br />
+
+        <button class="action-btn" onclick="closeCustomerModal()">Close</button>
+      </div>
+    </div>
+  </body>
+</html>

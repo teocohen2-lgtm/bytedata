@@ -50,6 +50,17 @@ GOOGLE_SHEET_CSV = "https://docs.google.com/spreadsheets/d/1CeJ8hxjkKly6Ef5hW1sp
 
 LOGIN_SHEET_CSV = "https://docs.google.com/spreadsheets/d/1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM/export?format=csv&gid=265750894"
 
+CUSTOMERS_SHEET_CSV = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM/"
+    "export?format=csv&gid=501341251"
+)
+
+COMMUNICATIONS_SHEET_CSV = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM/"
+    "export?format=csv&gid=1403813074"
+)
 # =====================================
 # LOGIN REQUIRED
 # =====================================
@@ -131,7 +142,8 @@ def login_user():
 
             return jsonify({
 
-                "status":"success"
+                "status":"success",
+                "redirect": "/dashboard"
 
             })
 
@@ -164,6 +176,222 @@ def home():
     return render_template(
         "index.html"
     )
+
+# =====================================
+# DASHBOARD
+# =====================================
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+
+    return render_template(
+        "dashboard.html"
+    )
+
+
+
+
+@app.route("/communications")
+@login_required
+def communications():
+    return render_template("communications.html")
+
+
+@app.route("/communications-data")
+@login_required
+def communications_data():
+
+    try:
+
+        df = pd.read_csv(
+            COMMUNICATIONS_SHEET_CSV
+        )
+
+        df.columns = (
+            df.columns
+            .str.lower()
+            .str.strip()
+        )
+
+        df = df.fillna("")
+
+        messages = df.to_dict(
+            orient="records"
+        )
+
+        return jsonify(
+            messages
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error": str(e)
+
+        })
+
+
+# =====================================
+# CUSTOMERS PAGE
+# =====================================
+
+@app.route("/customers")
+@login_required
+def customers():
+
+    return render_template(
+        "customers.html"
+    )
+
+# =====================================
+# CUSTOMERS DATA API
+# =====================================
+
+@app.route("/customers-data")
+@login_required
+def customers_data():
+
+    try:
+
+        df = pd.read_csv(
+            CUSTOMERS_SHEET_CSV
+        )
+
+        df.columns = (
+            df.columns
+            .str.lower()
+            .str.strip()
+        )
+
+        df = df.fillna("")
+
+        customers = df.to_dict(
+            orient="records"
+        )
+
+        return jsonify(
+            customers
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+                str(e)
+
+        })
+
+# =====================================
+# DASHBOARD DATA
+# =====================================
+
+@app.route("/dashboard-data")
+@login_required
+def dashboard_data():
+
+    try:
+
+        df = pd.read_csv(
+            CUSTOMERS_SHEET_CSV
+        )
+
+        df.columns = (
+            df.columns
+            .str.lower()
+            .str.strip()
+        )
+
+        total_customers = len(df)
+
+        active_customers = len(
+            df[
+                df["status"]
+                .astype(str)
+                .str.lower()
+                == "active"
+            ]
+        )
+
+        due_today = len(
+            df[
+                df["status"]
+                .astype(str)
+                .str.lower()
+                == "due today"
+            ]
+        )
+
+        overdue_customers = len(
+            df[
+                df["status"]
+                .astype(str)
+                .str.lower()
+                == "overdue"
+            ]
+        )
+
+        total_revenue = (
+            pd.to_numeric(
+                df[
+                    "subscription_amount"
+                ],
+                errors="coerce"
+            )
+            .fillna(0)
+            .sum()
+        )
+
+        customers = (
+            df.head(10)
+            .fillna("")
+            .to_dict(
+                orient="records"
+            )
+        )
+
+        return jsonify({
+
+            "total_customers":
+                int(
+                    total_customers
+                ),
+
+            "active_customers":
+                int(
+                    active_customers
+                ),
+
+            "due_today":
+                int(
+                    due_today
+                ),
+
+            "overdue_customers":
+                int(
+                    overdue_customers
+                ),
+
+            "total_revenue":
+                float(
+                    total_revenue
+                ),
+
+            "customers":
+                customers
+
+        })
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+                str(e)
+
+        })
 
 # =====================================
 # FETCH NEXT ROW
