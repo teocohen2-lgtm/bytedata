@@ -247,13 +247,13 @@ def communications_data():
             orient="records"
         )
 
-        try:
-            check_new_tickets()
-        except Exception as e:
-             print(
-            "Notification Error:",
-            e
-        )
+        # try:
+        #     check_new_tickets()
+        # except Exception as e:
+        #      print(
+        #     "Notification Error:",
+        #     e
+        # )
 
         return jsonify(
             messages
