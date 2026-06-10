@@ -21,7 +21,7 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(
     check_new_tickets,
     "interval",
-    seconds=10
+    seconds=60
 )
 
 scheduler.start()
