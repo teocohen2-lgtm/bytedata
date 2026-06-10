@@ -371,55 +371,65 @@ box-shadow:
         
 
         function openCustomerModal(index) {
-          console.log("VIEW CLICKED", index);
 
           const customer = allCustomers[index];
+
+if(!customer){
+    console.log("Customer not found");
+    return;
+}
+if(!customer){
+    console.log("Customer not found");
+    return;
+}
+
+          // const customer = allCustomers[index];
 
           const status = customer.status.toLowerCase();
 
           let html = `
 
-<div style="
-padding:20px;
-background:#1f2937;
-border-radius:12px;
-margin-bottom:15px;
-border:1px solid #374151;
-">
+                    <div style="
+                    padding:20px;
+                    background:#1f2937;
+                    border-radius:12px;
+                    margin-bottom:15px;
+                    border:1px solid #374151;
+                    ">
 
-<h2 style="
-margin-bottom:10px;
-">
-${customer.company_name}
-</h2>
+                    <h2 style="
+                    margin-bottom:10px;
+                    ">
+                    ${customer.company_name}
+                    </h2>
 
-<span style="
-background:${
-    status === 'active'
-      ? '#14532d'
-      : status === 'overdue'
-      ? '#7f1d1d'
-      : '#78350f'
-};
-padding:8px 16px;
-border-radius:20px;
-font-weight:bold;
-color:white;
-display:inline-block;
-">
-${customer.status}
-</span>
+                    <span style="
+                    background:${
+                        status === 'active'
+                          ? '#14532d'
+                          : status === 'overdue'
+                          ? '#7f1d1d'
+                          : '#78350f'
+                    };
+                    padding:8px 16px;
+                    border-radius:20px;
+                    font-weight:bold;
+                    color:white;
+                    display:inline-block;
+                    ">
+                    ${customer.status}
+                    </span>
 
-</div>
+                    </div>
 
-<br>
+                    <br>
 
-<p>
-<b>Amount:</b>
-$${customer.subscription_amount}
-</p>
+                    <p>
+                    <b>Amount:</b>
+                    $${customer.subscription_amount}
+                    </p>
 
-`;
+                    `;
 
           if (status === "active") {
             html += `
@@ -681,7 +691,7 @@ ${customer.status}
 
 <button
 class="action-btn"
-onclick="openCustomerModal(${index})"
+onclick="openCustomerModal(${customer.originalIndex ?? index})"
 >
 
 View
@@ -707,8 +717,16 @@ View
             c.company_name.toLowerCase().includes(search)
           );
 
-          renderTable(filtered);
-        }
+          filtered.forEach((c,i)=>{
+    c.originalIndex =
+    allCustomers.findIndex(
+        x => x.company_name === c.company_name
+    );
+});
+
+renderTable(filtered);
+
+         }
 
         loadCustomers();
       </script>

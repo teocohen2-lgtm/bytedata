@@ -5,10 +5,30 @@ import webbrowser
 from threading import Timer
 import json
 import os
+from notification_service import check_new_tickets
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
  
 app = Flask(__name__)
+
+# if os.environ.get(
+#     "WERKZEUG_RUN_MAIN"
+# ) == "true":
+
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(
+    check_new_tickets,
+    "interval",
+    seconds=10
+)
+
+scheduler.start()
+
+print(
+    "Notification Scheduler Started"
+)
 
 all_data = []
 
@@ -216,8 +236,23 @@ def communications_data():
 
         df = df.fillna("")
 
+        # df = df[
+        #     df["status"]
+        #     .astype(str)
+        #     .str.lower()
+        #     != "closed"
+        # ]
+
         messages = df.to_dict(
             orient="records"
+        )
+
+        try:
+            check_new_tickets()
+        except Exception as e:
+             print(
+            "Notification Error:",
+            e
         )
 
         return jsonify(

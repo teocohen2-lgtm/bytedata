@@ -4,6 +4,53 @@
     <title>Communications Center</title>
 
     <style>
+      .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+      }
+
+      .kpi-card {
+        background: #111827;
+        padding: 20px;
+        border-radius: 15px;
+      }
+
+      .kpi-card h3 {
+        color: #9ca3af;
+        font-size: 14px;
+      }
+
+      .kpi-card h1 {
+        margin-top: 10px;
+      }
+
+      .ticket {
+        background: #111827;
+        border: 1px solid #1f2937;
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .priority-high {
+        color: #ef4444;
+        font-weight: bold;
+      }
+
+      .priority-medium {
+        color: #f59e0b;
+        font-weight: bold;
+      }
+
+      .priority-low {
+        color: #22c55e;
+        font-weight: bold;
+      }
       body {
         background: #0b1220;
         color: white;
@@ -88,44 +135,96 @@
   <body>
     <div class="header">
       <h1>💬 Communications Center</h1>
+      <p>Manage customer conversations and support tickets</p>
     </div>
 
-    <div id="ticketList">Loading...</div>
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <h3>Open Tickets</h3>
+        <h1 id="openCount">0</h1>
+      </div>
 
+      <div class="kpi-card">
+        <h3>High Priority</h3>
+        <h1 id="highCount">0</h1>
+      </div>
+
+      <div class="kpi-card">
+        <h3>Medium Priority</h3>
+        <h1 id="mediumCount">0</h1>
+      </div>
+
+      <div class="kpi-card">
+        <h3>Closed</h3>
+        <h1 id="closedCount">0</h1>
+      </div>
+    </div>
+
+    <div id="ticketList"></div>
     <div id="ticketModal" class="modal">
       <div class="modal-content">
-        <h2 id="companyName"></h2>
+        <div
+          style="
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+          "
+        >
+          <h2 id="companyName"></h2>
 
-        <br />
+          <br />
 
-        <p>
-          <b>Subject:</b>
-          <span id="subject"></span>
-        </p>
+          <div>
+            <b>Subject:</b>
+            <span id="subject"></span>
+          </div>
 
-        <br />
+          <br />
 
-        <p>
-          <b>Customer Message:</b>
-        </p>
+          <div>
+            <b>Priority:</b>
+            <span id="priorityText"></span>
+          </div>
 
-        <br />
+          <br />
 
-        <div id="customerMessage"></div>
+          <div>
+            <b>Status:</b>
+            <span id="statusText"></span>
+          </div>
+        </div>
 
-        <br />
+        <div
+          style="
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+          "
+        >
+          <b>Customer Message</b>
+
+          <br /><br />
+
+          <div id="customerMessage"></div>
+        </div>
 
         <textarea id="agentReply" placeholder="Type reply here..."></textarea>
 
         <br /><br />
 
-        <button class="btn reply-btn" onclick="sendReply()">Send Reply</button>
+        <div id="actionArea">
+          <button class="btn reply-btn" onclick="sendReply()">
+            Send Reply
+          </button>
 
-        <button class="btn close-btn" onclick="closeTicket()">
-          Close Ticket
-        </button>
+          <button class="btn close-btn" onclick="closeTicket()">
+            Close Ticket
+          </button>
 
-        <button class="btn" onclick="hideModal()">Cancel</button>
+          <button class="btn" onclick="hideModal()">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -133,42 +232,96 @@
       let tickets = [];
       let selectedTicket = null;
 
+      function updateKPIs() {
+        document.getElementById("openCount").innerText = tickets.filter(
+          (t) => (t.status || "").toLowerCase() === "open"
+        ).length;
+
+        document.getElementById("highCount").innerText = tickets.filter(
+          (t) => (t.priority || "").toLowerCase() === "high"
+        ).length;
+
+        document.getElementById("mediumCount").innerText = tickets.filter(
+          (t) => (t.priority || "").trim().toLowerCase() === "medium"
+        ).length;
+
+        document.getElementById("closedCount").innerText = tickets.filter(
+          (t) => (t.status || "").trim().toLowerCase() === "closed"
+        ).length;
+      }
+
       async function loadTickets() {
         const res = await fetch("/communications-data");
 
         tickets = await res.json();
 
+        console.log("ALL TICKETS", tickets);
+        updateKPIs();
+
         let html = "";
 
         tickets.forEach((ticket, index) => {
+          if ((ticket.status || "").toLowerCase() === "closed") {
+            return;
+          }
           html += `
 
-        <div class="ticket">
+<div class="ticket">
 
-            <h3>
-            ${ticket.company_name}
-            </h3>
+<div>
 
-            <p>
-            ${ticket.subject}
-            </p>
+<h3>
+${ticket.company_name}
+</h3>
 
-            <br>
+<div>
+${ticket.subject}
+</div>
 
-            <button
-            class="open-btn"
-            onclick="openTicket(${index})"
-            >
-            Open Ticket
-            </button>
+<br>
 
-        </div>
+<div class="
+priority-${(ticket.priority || "").toLowerCase()}
+">
+
+${ticket.priority}
+
+</div>
+
+</div>
+
+<div>
+
+<button
+class="open-btn"
+onclick="openTicket(${index})"
+>
+Open Ticket
+</button>
+
+</div>
+
+</div>
 
         `;
         });
 
         document.getElementById("ticketList").innerHTML = html;
       }
+
+      // function openTicket(index) {
+      //   selectedTicket = tickets[index];
+
+      //   document.getElementById("companyName").innerText =
+      //     selectedTicket.company_name;
+
+      //   document.getElementById("subject").innerText = selectedTicket.subject;
+
+      //   document.getElementById("customerMessage").innerText =
+      //     selectedTicket.customer_message;
+
+      //   document.getElementById("ticketModal").style.display = "block";
+      // }
 
       function openTicket(index) {
         selectedTicket = tickets[index];
@@ -178,8 +331,60 @@
 
         document.getElementById("subject").innerText = selectedTicket.subject;
 
+        document.getElementById("priorityText").innerText =
+          selectedTicket.priority || "";
+
+        document.getElementById("statusText").innerText =
+          selectedTicket.status || "";
+
         document.getElementById("customerMessage").innerText =
           selectedTicket.customer_message;
+
+        document.getElementById("agentReply").value =
+          selectedTicket.agent_reply || "";
+
+        const status = (selectedTicket.status || "").toLowerCase();
+
+        if (status === "closed") {
+          document.getElementById("actionArea").innerHTML = `
+
+    <div style="
+    background:#14532d;
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bold;
+    ">
+        ✅ No Action Required
+    </div>
+
+    `;
+        } else {
+          document.getElementById("actionArea").innerHTML = `
+           <button
+class="btn reply-btn"
+onclick="sendReply()"
+>
+Send Reply
+</button>
+
+<button
+class="btn close-btn"
+onclick="closeTicket()"
+>
+Close Ticket
+</button>
+
+<button
+class="btn"
+onclick="hideModal()"
+>
+Cancel
+</button>
+          
+          
+          `;
+        }
 
         document.getElementById("ticketModal").style.display = "block";
       }
@@ -189,11 +394,85 @@
       }
 
       function sendReply() {
-        alert("We will update issue in next 24 hr");
+        const reply = document.getElementById("agentReply").value;
+
+        if (!reply) {
+          alert("Please enter reply");
+
+          return;
+        }
+
+        alert("Reply Sent Successfully");
+
+        hideModal();
       }
+      // function closeTicket() {
+      //   selectedTicket.status = "Closed";
+
+      //   hideModal();
+
+      //   loadTickets();
+
+      //   alert("Ticket Closed Successfully");
+      // }
 
       function closeTicket() {
-        alert("We Update Status Closed in 24 hr");
+        selectedTicket.status = "Closed";
+
+        hideModal();
+
+        let html = "";
+
+        tickets.forEach((ticket, index) => {
+          if ((ticket.status || "").toLowerCase() === "closed") {
+            return;
+          }
+
+          html += `
+
+<div class="ticket">
+
+<div>
+
+<h3>
+${ticket.company_name}
+</h3>
+
+<div>
+${ticket.subject}
+</div>
+
+<br>
+
+<div class="
+priority-${(ticket.priority || "").toLowerCase()}
+">
+
+${ticket.priority}
+
+</div>
+
+</div>
+
+<div>
+
+<button
+class="open-btn"
+onclick="openTicket(${index})"
+>
+Open Ticket
+</button>
+
+</div>
+
+</div>
+
+`;
+        });
+
+        document.getElementById("ticketList").innerHTML = html;
+
+        alert("Ticket Closed Successfully");
       }
 
       loadTickets();
