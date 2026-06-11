@@ -7,10 +7,14 @@ import json
 import os
 from notification_service import check_new_tickets
 from apscheduler.schedulers.background import BackgroundScheduler
+import time
 
 
  
 app = Flask(__name__)
+
+cached_df = None
+last_load = 0
 
 # if os.environ.get(
 #     "WERKZEUG_RUN_MAIN"
@@ -36,6 +40,36 @@ PROGRESS_FILE = "progress.json"
 
 
 app.secret_key = "bytedata_secure_session_key"
+
+def get_sheet_data():
+
+    global cached_df
+    global last_load
+
+    current_time = time.time()
+
+    if (
+        cached_df is None
+        or
+        current_time - last_load > 60
+    ):
+
+        print(
+            "Refreshing Sheet..."
+        )
+
+        cached_df = pd.read_csv(
+            GOOGLE_SHEET_CSV
+        )
+
+        cached_df.columns = (
+            cached_df.columns
+            .str.lower()
+        )
+
+        last_load = current_time
+
+    return cached_df
 
 def load_progress():
 
@@ -428,6 +462,69 @@ def dashboard_data():
 
         })
 
+
+
+
+@app.route("/dashboard-analytics")
+@login_required
+def dashboard_analytics():
+
+    df = pd.read_csv(
+        CUSTOMERS_SHEET_CSV
+    )
+
+    df.columns = (
+        df.columns
+        .str.lower()
+        .str.strip()
+    )
+
+    return jsonify({
+
+        "countries":
+            df["country"]
+            .value_counts()
+            .to_dict(),
+
+        "assigned":
+            df["assigned_to"]
+            .value_counts()
+            .to_dict(),
+
+        "status":
+            df["status"]
+            .value_counts()
+            .to_dict()
+
+    })
+
+
+
+@app.route("/analytics")
+@login_required
+def analytics():
+    return render_template(
+        "analytics.html"
+    )
+
+
+@app.route("/reports")
+@login_required
+def reports():
+    return render_template(
+        "reports.html"
+    )
+
+
+@app.route("/settings")
+@login_required
+def settings():
+    return render_template(
+        "settings.html"
+    )
+
+
+
 # =====================================
 # FETCH NEXT ROW
 # =====================================
@@ -442,9 +539,11 @@ def fetch_next_row():
             "username"
         ).lower()
 
-        df = pd.read_csv(
-            GOOGLE_SHEET_CSV
-        )
+        # df = pd.read_csv(
+        #     GOOGLE_SHEET_CSV
+        # )
+
+        df = get_sheet_data()
 
         df.columns = df.columns.str.lower()
 
@@ -512,6 +611,10 @@ def fetch_next_row():
             "message":str(e)
 
         })
+
+
+
+
 
 # =====================================
 # SAVE VERIFIED

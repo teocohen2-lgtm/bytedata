@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteData Dashboard</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      body {
+        background: #f5f7fb;
+        color: #111827;
+      }
+
+      #menuBtn {
+        border: none;
+        background: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-right: 15px;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* SIDEBAR */
+
+      .sidebar {
+        width: 260px;
+        background: white;
+        border-right: 1px solid #e5e7eb;
+        padding: 25px;
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 35px;
+      }
+
+      .logo img {
+        width: 140px;
+      }
+
+      .logo p {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .menu a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        padding: 14px 16px;
+        border-radius: 12px;
+        color: #374151;
+        font-weight: 500;
+        transition: 0.2s;
+      }
+
+      .menu a:hover {
+        background: #f3f4f6;
+      }
+
+      .menu a.active {
+        background: #2563eb;
+        color: white;
+      }
+
+      /* MAIN */
+
+      .main {
+        flex: 1;
+        padding: 35px;
+        background: #f5f7fb;
+      }
+
+      /* TOPBAR */
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .topbar h1 {
+        font-size: 38px;
+        font-weight: 700;
+        color: #111827;
+      }
+
+      .topbar p {
+        margin-top: 5px;
+        color: #6b7280;
+      }
+
+      .notification {
+        background: white;
+        border: 1px solid #e5e7eb;
+        padding: 12px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      /* HERO */
+
+      .hero {
+        background: white;
+        padding: 28px;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+
+      .hero h2 {
+        font-size: 30px;
+        color: #111827;
+        margin-bottom: 8px;
+      }
+
+      .hero p {
+        color: #6b7280;
+        font-size: 15px;
+      }
+
+      /* KPI CARDS */
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 18px;
+        margin-bottom: 30px;
+      }
+
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        transition: 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .card h3 {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      .card p {
+        font-size: 36px;
+        font-weight: 700;
+        color: #111827;
+      }
+
+      /* CONTENT GRID */
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+      }
+
+      /* TABLE */
+
+      .table-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .table-card h2 {
+        margin-bottom: 20px;
+        color: #111827;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        background: #f8fafc;
+        padding: 14px;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      td {
+        padding: 14px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #111827;
+      }
+
+      tr:hover {
+        background: #f8fafc;
+      }
+
+      .search-box {
+        width: 250px;
+        padding: 10px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        background: white;
+      }
+
+      .bell {
+        background: white;
+        border: 1px solid #e5e7eb;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .profile {
+        background: white;
+        border: 1px solid #e5e7eb;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .sidebar {
+        transition: 0.3s;
+      }
+
+      .sidebar.collapsed {
+        width: 80px;
+      }
+
+      .sidebar.collapsed .menu-text {
+        display: none;
+      }
+
+      .sidebar.collapsed .logo p {
+        display: none;
+      }
+
+      /* STATUS */
+
+      .status-active {
+        background: #dcfce7;
+        color: #166534;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+      }
+
+      .status-overdue {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+      }
+
+      .status-due {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+      }
+
+      /* ACTIVITY */
+
+      .activity {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .activity h2 {
+        margin-bottom: 20px;
+        color: #111827;
+      }
+
+      .activity-item {
+        padding: 14px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+
+      .activity-item strong {
+        color: #111827;
+      }
+
+      .activity-item p {
+        margin-top: 5px;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      /* MOBILE */
+
+      @media (max-width: 1200px) {
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          width: 100%;
+        }
+
+        .cards {
+          grid-template-columns: 1fr;
+        }
+
+        .main {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+
+      <div class="sidebar">
+        <div class="logo">
+          <img src="/static/logo.png" />
+
+          <p>ByteData Operations</p>
+        </div>
+
+        <div class="menu">
+          <a href="/dashboard" class="active">
+            <span class="icon">📊</span>
+            <span class="menu-text">Dashboard</span>
+          </a>
+
+          <a href="/">
+            <span class="icon">✅</span>
+            <span class="menu-text">Data Verification</span>
+          </a>
+          <a href="/customers">
+            <span class="icon">👥</span>
+            <span class="menu-text">Customers</span>
+          </a>
+          <!-- <a href="/reports"> 📈 Reports </a> -->
+
+          <a href="/communications">
+            <span class="icon">💬</span>
+            <span class="menu-text">Communications</span>
+          </a>
+          <a href="/logout">
+            <span class="icon">🚪</span>
+            <span class="menu-text">Logout</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Main -->
+
+      <div class="main">
+        <div class="topbar">
+          <button id="menuBtn">☰</button>
+          <div>
+            <h1>Dashboard</h1>
+            <p>Subscription & Collections Overview</p>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: center">
+            <input type="text" placeholder="Search..." class="search-box" />
+
+            <div class="bell">🔔</div>
+
+            <div class="profile">👤</div>
+          </div>
+        </div>
+
+        <div class="hero">
+          <h2>Welcome Back 👋</h2>
+
+          <p>
+            Manage customers, subscriptions, collections and communications from
+            one place.
+          </p>
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <h3>Total Customers</h3>
+            <p id="totalCustomers">0</p>
+          </div>
+
+          <div class="card">
+            <h3>Active</h3>
+            <p id="activeCustomers">0</p>
+          </div>
+
+          <div class="card">
+            <h3>Due Today</h3>
+            <p id="dueToday">0</p>
+          </div>
+
+          <div class="card">
+            <h3>Overdue</h3>
+            <p id="overdueCustomers">0</p>
+          </div>
+
+          <div class="card">
+            <h3>Total Revenue</h3>
+            <p id="totalRevenue">$0</p>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="table-card">
+            <h2>Recent Customers</h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Plan</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody id="customerTable"></tbody>
+            </table>
+          </div>
+
+          <div class="activity">
+            <h2>Recent Activity</h2>
+
+            <div class="activity-item">
+              <b>Customer Added</b>
+              <p>New customer subscription created.</p>
+            </div>
+
+            <div class="activity-item">
+              <b>Payment Received</b>
+              <p>Monthly subscription payment collected.</p>
+            </div>
+
+            <div class="activity-item">
+              <b>Communication Ticket</b>
+              <p>New support ticket assigned.</p>
+            </div>
+
+            <div class="activity-item">
+              <b>Renewal Due</b>
+              <p>Upcoming renewal reminder generated.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function loadDashboard() {
+        try {
+          const res = await fetch("/dashboard-data");
+
+          const data = await res.json();
+
+          document.getElementById("totalCustomers").innerText =
+            data.total_customers;
+
+          document.getElementById("activeCustomers").innerText =
+            data.active_customers;
+
+          document.getElementById("dueToday").innerText = data.due_today;
+
+          document.getElementById("overdueCustomers").innerText =
+            data.overdue_customers;
+
+          document.getElementById("totalRevenue").innerText =
+            "$" + data.total_revenue;
+
+          let rows = "";
+
+          data.customers.forEach((c) => {
+            rows += `
+                <tr>
+                    <td>${c.company_name}</td>
+                    <td>${c.subscription_plan}</td>
+                    <td>$${c.subscription_amount}</td>
+                    <td>${c.status}</td>
+                </tr>
+            `;
+          });
+
+          document.getElementById("customerTable").innerHTML = rows;
+        } catch (err) {
+          console.log(err);
+        }
+      }
+
+      document.getElementById("menuBtn").addEventListener("click", function () {
+        document.querySelector(".sidebar").classList.toggle("collapsed");
+      });
+
+      loadDashboard();
+    </script>
+  </body>
+</html>

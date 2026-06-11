@@ -5,6 +5,32 @@
     <title>ByteData AI Dashboard</title>
 
     <style>
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 25px;
+      }
+
+      .menu a {
+        text-decoration: none;
+        color: #374151;
+        padding: 14px 16px;
+        border-radius: 12px;
+        transition: 0.2s;
+        font-weight: 500;
+      }
+
+      .menu a:hover {
+        background: #1e293b;
+        color: #111827;
+      }
+
+      .menu a.active {
+        background: #2563eb;
+        color: white;
+      }
+
       /* =====================================
    RESPONSIVE MOBILE + TABLET
 ===================================== */
@@ -54,16 +80,6 @@
 
         .sidebar {
           gap: 10px;
-        }
-
-        .sidebar button {
-          flex: 1;
-
-          margin-top: 0;
-
-          min-height: 42px;
-
-          font-size: 14px;
         }
 
         .button-row {
@@ -116,7 +132,7 @@
       }
 
       body {
-        font-family: Arial;
+        font-family: Segoe UI, Arial, sans-serif;
         background: #f3f4f6;
         overflow-x: hidden;
       }
@@ -129,7 +145,8 @@
       .sidebar {
         width: 280px;
 
-        background: #0f172a;
+        background: #ffffff;
+        border-right: 1px solid #e5e7eb;
 
         color: white;
 
@@ -158,12 +175,10 @@
 
       .stats {
         background: #1e293b;
-
-        padding: 18px;
-
-        border-radius: 14px;
-
-        margin-bottom: 25px;
+        padding: 20px;
+        border-radius: 16px;
+        margin-top: auto;
+        border: 1px solid #334155;
       }
 
       .stats h3 {
@@ -175,41 +190,9 @@
       .stats p {
         font-size: 34px;
 
-        color: #00ff88;
+        color: #111827;
 
         font-weight: bold;
-      }
-
-      .sidebar button {
-        width: 100%;
-
-        padding: 15px;
-
-        border: none;
-
-        border-radius: 12px;
-
-        margin-top: 15px;
-
-        cursor: pointer;
-
-        font-size: 15px;
-
-        font-weight: bold;
-      }
-
-      .fetch-btn {
-        background: #00ff88;
-      }
-
-      .export-btn {
-        background: #2563eb;
-        color: white;
-      }
-
-      .logout-btn {
-        background: #ef4444;
-        color: white;
       }
 
       .main {
@@ -335,25 +318,23 @@
       }
 
       .verify-btn {
-        background: #00ff88;
-
-        padding: 15px 25px;
-
+        background: #1a73e8;
+        color: white;
+        padding: 12px 20px;
         border: none;
-
-        border-radius: 12px;
-
+        border-radius: 10px;
         cursor: pointer;
-
-        font-weight: bold;
+        font-weight: 600;
+        min-width: 140px;
       }
 
       .json-panel {
         width: 420px;
 
-        background: #020617;
+        background: #ffffff;
+        border-left: 1px solid #e5e7eb;
 
-        color: #00ff88;
+        color: #111827;
 
         padding: 25px;
 
@@ -361,7 +342,7 @@
       }
 
       .json-panel h2 {
-        color: white;
+        color: #111827;
 
         margin-bottom: 20px;
       }
@@ -371,6 +352,36 @@
 
         line-height: 1.6;
       }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .export-btn {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        min-width: 140px;
+      }
+
+      @media (max-width: 768px) {
+        .actions {
+          flex-direction: column;
+        }
+
+        .verify-btn,
+        .export-btn {
+          width: 100%;
+        }
+      }
     </style>
   </head>
 
@@ -379,24 +390,31 @@
       <div class="sidebar">
         <div class="logo-container">
           <img src="/static/logo.png" />
+          <div class="sub-logo">ByteData Operations</div>
+        </div>
 
-          <div class="sub-logo">AI Dataset Operations</div>
+        <div class="menu">
+          <a href="/dashboard"> 📊 Dashboard </a>
+
+          <a href="/" class="active"> ✅ Data Verification </a>
+
+          <a href="/customers"> 👥 Customers </a>
+
+          <a href="/communications"> 💬 Communications </a>
+
+          <!-- <a href="/analytics"> 📈 Analytics </a>
+
+          <a href="/reports"> 📄 Reports </a>
+
+          <a href="/settings"> ⚙️ Settings </a> -->
+
+          <a href="/logout"> 🚪 Logout </a>
         </div>
 
         <div class="stats">
           <h3>Verified Rows</h3>
-
           <p id="verifiedCount">0</p>
         </div>
-
-        <button class="fetch-btn" onclick="fetchNextRow()">
-          Fetch Dataset
-        </button>
-
-        <button class="export-btn" onclick="exportExcel()">Export Excel</button>
-
-        <button class="dashboard-btn" onclick="goDashboard()">Dashboard</button>
-        <button class="logout-btn" onclick="logoutUser()">Logout</button>
       </div>
 
       <div class="main">
@@ -414,6 +432,14 @@
           <div id="reviewContainer"></div>
 
           <div class="actions">
+            <button class="verify-btn" onclick="fetchNextRow()">
+              Fetch Dataset
+            </button>
+
+            <button class="export-btn" onclick="exportExcel()">
+              Export Excel
+            </button>
+
             <button class="verify-btn" onclick="verifyRow()">
               Save & Verify
             </button>
