@@ -7,17 +7,16 @@
     <style>
 
 .modal-content h2{
-    color:white;
+  color:#111827;
 }
 
 .modal-content p{
-    color:#e5e7eb;
+  color:#374151;
 }
 
 .modal-content label{
-    color:#d1d5db;
-    font-weight:600;
-}
+  color:#374151;
+ }
 
 .kpi-row{
 display:grid;
@@ -27,9 +26,11 @@ margin:20px 0;
 }
 
 .kpi-card{
-background:#111827;
-padding:20px;
-border-radius:16px;
+  background:white;
+    border:1px solid #e5e7eb;
+    padding:24px;
+    min-height:120px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
 }
 
 .kpi-card h3{
@@ -66,26 +67,19 @@ margin-top:10px;
       }
 
       .modal-content {
-        background:#0f172a;
-color:white;
-
-width:95%;
-max-width:750px;
-
-padding:30px;
-
-border-radius:24px;
-
-border:1px solid #1f2937;
-
-box-shadow:
-0 25px 50px rgba(0,0,0,.5);
+        background:white;
+    color:#111827;
+    width:95%;
+    max-width:750px;
+    padding:30px;
+    border-radius:20px;
+    border:1px solid #e5e7eb;
+    box-shadow:0 20px 40px rgba(0,0,0,.15);
       }
 
       .success-btn {
-        background: #00ff88;
-
-        color: black;
+        background:#1a73e8;
+        color:white;
 
         border: none;
 
@@ -99,12 +93,11 @@ box-shadow:
       }
 
       .warning-btn {
-        background: #ef4444;
+        background:#f3f4f6;
+    color:#111827;
+    border:1px solid #d1d5db;
 
-        color: white;
-
-        border: none;
-
+ 
         padding: 10px 15px;
 
         border-radius: 8px;
@@ -119,9 +112,51 @@ box-shadow:
         font-family: Arial, sans-serif;
       }
 
+      .mobile-menu{
+    display:none;
+}
+
+@media(max-width:768px){
+
+    .mobile-menu{
+        display:block;
+        position:fixed;
+        top:15px;
+        left:15px;
+        z-index:1000;
+        background:white;
+        border:none;
+        border-radius:10px;
+        padding:10px 14px;
+        box-shadow:0 2px 8px rgba(0,0,0,.15);
+    }
+
+    .sidebar{
+        position:fixed;
+        left:-280px;
+        top:0;
+        height:100vh;
+        z-index:999;
+        transition:.3s;
+    }
+
+    .sidebar.show{
+        left:0;
+    }
+
+    .main{
+        width:100%;
+    }
+
+    .kpi-row{
+        grid-template-columns:1fr;
+    }
+}
+
       body {
-        background: #0b1220;
-        color: white;
+        background:#f8fafc;
+         color:#111827;
+
       }
 
       .container {
@@ -130,50 +165,76 @@ box-shadow:
       }
 
       .sidebar {
-        width: 260px;
-        background: #0f172a;
-        color: white;
-        padding: 25px;
-      }
+        width:260px;
+    background:white;
+    border-right:1px solid #e5e7eb;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+       }
 
-      .logo {
-        text-align: center;
-        margin-bottom: 30px;
-      }
+       .logo{
+    text-align:center;
+    padding-bottom:24px;
+    border-bottom:1px solid #e5e7eb;
+    margin-bottom:24px;
+}
 
-      .logo img {
-        width: 150px;
-      }
+.logo img{
+    width:120px;
+}
 
-      .logo p {
-        color: #94a3b8;
-        margin-top: 10px;
-      }
+.logo p{
+    color:#6b7280;
+    margin-top:12px;
+    font-size:14px;
+}
 
-      .menu {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
+      .menu{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:25px;
+}
 
-      .menu a {
-        text-decoration: none;
-        color: white;
-        background: #1e293b;
-        padding: 14px;
-        border-radius: 12px;
-      }
+.menu a{
+    display:flex;
+    align-items:center;
 
-      .menu a.active {
-        background: #00ff88;
-        color: black;
-        font-weight: bold;
-      }
+    text-decoration:none;
 
+    padding:14px 18px;
+
+    border-radius:12px;
+
+    color:#374151;
+
+    font-size:15px;
+
+    font-weight:500;
+
+    background:white;
+
+    border:1px solid #e5e7eb;
+
+    transition:.2s ease;
+}
+
+.menu a:hover{
+    background:#f3f4f6;
+    transform:translateX(3px);
+}
+
+.menu a.active{
+    background:#1a73e8;
+    color:white;
+    border-color:#1a73e8;
+}
       .main {
-        flex: 1;
-        padding: 25px;
-        background: #0b1220;
+        flex:1;
+    padding:32px;
+    background:#f8fafc;
       }
 
       .header {
@@ -196,18 +257,17 @@ box-shadow:
       .search-box input {
         width: 100%;
         padding: 14px;
-        border: 1px solid #d1d5db;
         border-radius: 12px;
-        background:#111827;
-        color:white;
-        border:none;
-      }
+        background:white;
+        color:#111827;
+        border:1px solid #d1d5db;
+       }
 
       .table-card {
-        background: #111827;
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+         overflow: hidden;
+         background:white;
+          border:1px solid #e5e7eb;
+         border-radius:20px;
       }
 
       table {
@@ -216,17 +276,42 @@ box-shadow:
       }
 
       th {
-        background: #1f2937;
-        padding: 15px;
-        text-align: left;
-        color:white
+        background:#f8fafc;
+    color:#64748b;
+
+    text-align:left;
+
+    padding:16px 20px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    border-bottom:1px solid #e5e7eb;
+
+    white-space:nowrap;
       }
 
       td {
-        padding: 15px;
-        border-top: 1px solid #e5e7eb;
-        color:white;
+        padding:18px 20px;
+
+border-bottom:1px solid #f1f5f9;
+
+color:#111827;
+
+font-size:15px;
       }
+
+      table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+thead{
+    position:sticky;
+    top:0;
+    z-index:1;
+}
 
       .status {
         padding: 6px 12px;
@@ -251,13 +336,12 @@ box-shadow:
       }
 
       .action-btn {
-        border: none;
-        padding: 8px 14px;
-        border-radius: 8px;
-        cursor: pointer;
-        background:#00ff88;
-        color:black;
-        font-weight:bold;
+        background:#1a73e8;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:600;
       }
 
       .action-btn:hover {
@@ -282,6 +366,27 @@ box-shadow:
           overflow-x: auto;
         }
       }
+
+      @media(max-width:768px){
+
+.table-card{
+    overflow-x:auto;
+}
+
+table{
+    min-width:900px;
+}
+
+.kpi-row{
+    grid-template-columns:1fr;
+}
+
+.modal-content{
+    width:95%;
+    max-height:90vh;
+    overflow:auto;
+}
+}
     </style>
   </head>
 
@@ -391,11 +496,11 @@ if(!customer){
 
                     <div style="
                     padding:20px;
-                    background:#1f2937;
+                    background:white;
                     border-radius:12px;
                     margin-bottom:15px;
-                    border:1px solid #374151;
-                    ">
+                    border:1px solid #e5e7eb;
+                      ">
 
                     <h2 style="
                     margin-bottom:10px;
@@ -476,12 +581,12 @@ if(!customer){
             html += `
 
     <div style="
-       background:#1f2937;
-        padding:20px;
-        border-radius:12px;
-    margin-top:15px;
-border:1px solid #374151;
-color:white;
+      background:white;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:24px;
+    margin-bottom:20px;
+color:black;
     ">
 
         <h3 style="
@@ -512,8 +617,8 @@ font-size:24px;
             style="
               width:100%;
 padding:14px;
-background:#111827;
-color:white;
+background:white;
+color:black;
 border:1px solid #374151;
 border-radius:10px;
             "
@@ -548,8 +653,8 @@ border-radius:10px;
                width:100%;
 height:120px;
 padding:14px;
-background:#111827;
-color:white;
+background:white;
+color:black;
 border:1px solid #374151;
 border-radius:10px;
 resize:none;
@@ -745,5 +850,16 @@ renderTable(filtered);
         <button class="action-btn" onclick="closeCustomerModal()">Close</button>
       </div>
     </div>
+    <button class="mobile-menu" onclick="toggleMenu()">
+      ☰
+      </button>
+      
+      <script>
+      function toggleMenu(){
+          document
+              .querySelector(".sidebar")
+              .classList.toggle("show");
+      }
+      </script>
   </body>
 </html>
