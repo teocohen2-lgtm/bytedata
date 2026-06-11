@@ -4,10 +4,7 @@ from email.mime.text import MIMEText
 
 print("STARTING EMAIL SEND")
 
-print(
-    "WOULD SEND EMAIL TO:",
-    email
-)
+ 
 
 def send_notification_email(
     to_email,
