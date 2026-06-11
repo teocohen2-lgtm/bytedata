@@ -2,6 +2,12 @@ import smtplib
 
 from email.mime.text import MIMEText
 
+print("STARTING EMAIL SEND")
+
+print(
+    "WOULD SEND EMAIL TO:",
+    email
+)
 
 def send_notification_email(
     to_email,
@@ -31,10 +37,16 @@ Please login to ByteData app.
 
     msg["To"] = to_email
 
+    print("CONNECTING TO GMAIL")
+
     server = smtplib.SMTP(
         "smtp.gmail.com",
-        587
+        587,
+        timeout=15
+
     )
+
+    print("GMAIL LOGIN SUCCESS")
 
     server.starttls()
 
@@ -54,3 +66,5 @@ Please login to ByteData app.
     print(
         f"Email Sent To {to_email}"
     )
+
+    print("EMAIL SENT")
