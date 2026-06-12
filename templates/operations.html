@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteData Operations Center</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+      body {
+        background: #f8fafc;
+        color: #111827;
+      }
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 260px;
+        background: #fff;
+        border-right: 1px solid #e5e7eb;
+        padding: 24px;
+      }
+      .logo {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .logo img {
+        width: 120px;
+      }
+      .logo p {
+        color: #6b7280;
+        margin-top: 8px;
+      }
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .menu a {
+        text-decoration: none;
+        color: #374151;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+      }
+      .menu a.active {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+      }
+      .main {
+        flex: 1;
+        padding: 30px;
+      }
+      .header h1 {
+        font-size: 34px;
+      }
+      .header p {
+        color: #6b7280;
+        margin-top: 6px;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin: 25px 0;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .card h3 {
+        font-size: 14px;
+        color: #6b7280;
+      }
+      .card p {
+        font-size: 30px;
+        font-weight: 700;
+        margin-top: 10px;
+      }
+      .search input {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+      }
+      .table-card {
+        margin-top: 20px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background: #f8fafc;
+        color: #6b7280;
+        padding: 14px;
+        text-align: left;
+      }
+      td {
+        padding: 14px;
+        border-top: 1px solid #e5e7eb;
+      }
+      .btn {
+        background: #1a73e8;
+        color: #fff;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .close-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-width: 1100px;
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+      }
+
+      .customer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .info-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .info-card h3 {
+        margin-bottom: 15px;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .days-box {
+        text-align: center;
+        background: #eff6ff;
+        padding: 15px;
+        border-radius: 12px;
+      }
+
+      .days-box span {
+        display: block;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        margin-top: 10px;
+      }
+
+      .overdue {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      .active {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .health-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+      }
+
+      .action-buttons {
+        display: grid;
+        gap: 12px;
+      }
+
+      .blue-btn,
+      .green-btn,
+      .orange-btn,
+      .dark-btn,
+      .health-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .blue-btn {
+        background: #1a73e8;
+        color: white;
+      }
+
+      .green-btn {
+        background: #16a34a;
+        color: white;
+      }
+
+      .orange-btn {
+        background: #ea580c;
+        color: white;
+      }
+
+      .dark-btn {
+        background: #111827;
+        color: white;
+      }
+
+      .health-btn {
+        width: 100%;
+        margin-top: 15px;
+        background: #1a73e8;
+        color: white;
+      }
+
+      .timeline-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      @media (max-width: 768px) {
+        .modal-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .customer-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+        }
+      }
+      .action-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+      .mobile-menu {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .sidebar {
+          position: fixed;
+          left: -260px;
+          top: 0;
+          height: 100vh;
+          transition: 0.3s;
+          z-index: 999;
+        }
+        .sidebar.show {
+          left: 0;
+        }
+        .mobile-menu {
+          display: block;
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          z-index: 1000;
+        }
+        .main {
+          padding: 60px 15px;
+        }
+        .kpis {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button
+      class="mobile-menu btn"
+      onclick="document.querySelector('.sidebar').classList.toggle('show')"
+    >
+      ☰
+    </button>
+    <div class="container">
+      <div class="sidebar">
+        <div class="logo">
+          <img src="/static/logo.png" alt="ByteData Logo" />
+        </div>
+        <div class="menu">
+          <a class="active" href="/dashboard">📊 Dashboard</a>
+          <a href="/">✅ Data Verification</a>
+          <a href="/customers">👥 Customers</a>
+          <a href="/communications">💬 Communications</a>
+          <a href="/operations">⚙️ Operations Center</a>
+          <!-- <a href="/analytics">📈 Analytics</a>
+              <a href="/reports">📄 Reports</a>
+              <a href="/settings">⚙️ Settings</a> -->
+          <a href="/logout">🚪 Logout</a>
+        </div>
+      </div>
+      <div class="main">
+        <div class="header">
+          <h1>Operations Center</h1>
+          <p>Monitor services, payments and customer operations</p>
+        </div>
+
+        <div class="kpis">
+          <div class="card">
+            <h3>Total Services</h3>
+            <p id="total">0</p>
+          </div>
+          <div class="card">
+            <h3>Healthy</h3>
+            <p id="healthy">0</p>
+          </div>
+          <div class="card">
+            <h3>Warning</h3>
+            <p id="warning">0</p>
+          </div>
+          <div class="card">
+            <h3>Stopped</h3>
+            <p id="stopped">0</p>
+          </div>
+        </div>
+
+        <div class="search">
+          <input
+            id="search"
+            placeholder="Search company..."
+            onkeyup="filterRows()"
+          />
+        </div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Service</th>
+                <th>Health</th>
+                <th>Payment Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <div class="customer-header">
+          <div>
+            <h2 id="title"></h2>
+
+            <div class="status-badge overdue" id="customerStatus">Overdue</div>
+          </div>
+
+          <div class="days-box">
+            <span id="daysRemaining">0</span>
+            <small>Days Remaining</small>
+          </div>
+        </div>
+
+        <div class="modal-grid">
+          <!-- LEFT -->
+
+          <div>
+            <div class="info-card">
+              <h3>Payment Information</h3>
+
+              <div class="info-row">
+                <span>Payment Status</span>
+                <b id="paymentStatus"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Payment Date</span>
+                <b id="paymentDate"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Renewal Amount</span>
+                <b id="renewalAmount"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Service Status</span>
+                <b id="serviceStatus"></b>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h3>Customer Actions</h3>
+
+              <div class="action-buttons">
+                <button class="blue-btn" onclick="sendReminder()">
+                  📧 Send Reminder
+                </button>
+
+                <button class="green-btn" onclick="sendPaymentLink()">
+                  🔗 Payment Link
+                </button>
+
+                <button class="orange-btn" onclick="restartService()">
+                  🔄 Restart Service
+                </button>
+
+                <button class="dark-btn">✓ Mark Paid</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+
+          <div>
+            <div class="info-card">
+              <h3>Service Health</h3>
+
+              <div id="healthResults">
+                <div class="health-item">
+                  API Endpoint
+                  <span>⚪ Not Tested</span>
+                </div>
+
+                <div class="health-item">
+                  Database
+                  <span>⚪ Not Tested</span>
+                </div>
+
+                <div class="health-item">
+                  Payment Gateway
+                  <span>⚪ Not Tested</span>
+                </div>
+              </div>
+
+              <button class="health-btn" onclick="runHealthCheck()">
+                Run Health Check
+              </button>
+            </div>
+
+            <div class="info-card">
+              <h3>Recent Activity</h3>
+
+              <div class="timeline">
+                <div class="timeline-item">Payment reminder sent</div>
+
+                <div class="timeline-item">Health check completed</div>
+
+                <div class="timeline-item">Service restarted</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px">
+          <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let customers = [];
+      let current = null;
+
+      async function loadData() {
+        const res = await fetch("/operations-data");
+        customers = await res.json();
+
+        document.getElementById("total").innerText = customers.length;
+        document.getElementById("healthy").innerText = customers.filter((x) =>
+          String(x.health).includes("🟢")
+        ).length;
+        document.getElementById("warning").innerText = customers.filter((x) =>
+          String(x.health).includes("🟠")
+        ).length;
+        document.getElementById("stopped").innerText = customers.filter((x) =>
+          String(x.health).includes("🔴")
+        ).length;
+        render(customers);
+      }
+
+      function render(rows) {
+        let html = "";
+        rows.forEach((c, i) => {
+          html += `<tr>
+<td>${c.company_name || ""}</td>
+<td>${c.status || ""}</td>
+<td>${c.payment_status || ""}</td>
+<td>${c.service_status || ""}</td>
+<td>${c.health || ""}</td>
+<td>${c.payment_date || ""}</td>
+<td><button class="btn" onclick="showDetails('${
+            c.customer_id
+          }')">Details</button></td>
+</tr>`;
+        });
+        document.getElementById("tableBody").innerHTML = html;
+      }
+
+      function filterRows() {
+        const q = document.getElementById("search").value.toLowerCase();
+        render(
+          customers.filter((x) =>
+            (x.company_name || "").toLowerCase().includes(q)
+          )
+        );
+      }
+
+      function showDetails(customerId) {
+        current = customers.find(
+          (c) => String(c.customer_id) === String(customerId)
+        );
+
+        if (!current) {
+          alert("Customer not found");
+          return;
+        }
+
+        document.getElementById("title").innerText = current.company_name || "";
+
+        document.getElementById("paymentStatus").innerText =
+          current.payment_status || "";
+
+        document.getElementById("paymentDate").innerText =
+          current.payment_date || "N/A";
+
+        document.getElementById("renewalAmount").innerText =
+          current.renewal_amount || "$0";
+
+        document.getElementById("serviceStatus").innerText =
+          current.service_status || "";
+
+        document.getElementById("daysRemaining").innerText =
+          current.days_remaining || "0";
+
+        const badge = document.getElementById("customerStatus");
+
+        badge.innerText = current.status || "";
+
+        badge.className = "status-badge";
+
+        if (String(current.status).toLowerCase().includes("active")) {
+          badge.classList.add("active");
+        } else {
+          badge.classList.add("overdue");
+        }
+
+        document.getElementById("modal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("modal").style.display = "none";
+      }
+      function checkHealth() {
+        alert("Health check completed");
+      }
+      function restartService() {
+        alert("Service restarted successfully");
+      }
+      loadData();
+
+      function runHealthCheck() {
+        document.getElementById("healthResults").innerHTML = `
+
+    <div class="health-item">
+        API Endpoint
+        <span>⏳ Checking...</span>
+    </div>
+
+    <div class="health-item">
+        Database
+        <span>⏳ Checking...</span>
+    </div>
+
+    <div class="health-item">
+        Payment Gateway
+        <span>⏳ Checking...</span>
+    </div>
+
+`;
+
+        setTimeout(() => {
+          document.getElementById("healthResults").innerHTML = `
+
+        <div class="health-item">
+            API Endpoint
+            <span>🟢 Healthy</span>
+        </div>
+
+        <div class="health-item">
+            Database
+            <span>🟢 Healthy</span>
+        </div>
+
+        <div class="health-item">
+            Payment Gateway
+            <span>🟢 Healthy</span>
+        </div>
+
+    `;
+        }, 2000);
+      }
+
+      function restartService() {
+        alert("Service Restarted Successfully");
+      }
+
+      function sendReminder() {
+        alert("✅ Reminder Email Sent Successfully");
+      }
+
+      function sendPaymentLink() {
+        alert("✅ Payment Link Sent Successfully");
+      }
+    </script>
+  </body>
+</html>

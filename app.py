@@ -246,6 +246,136 @@ def dashboard():
 
 
 
+@app.route("/operations")
+@login_required
+def operations():
+    return render_template(
+        "operations.html"
+    )
+
+@app.route("/operations-data")
+@login_required
+def operations_data():
+
+    try:
+
+        df = pd.read_csv(
+            CUSTOMERS_SHEET_CSV
+        )
+
+        df.columns = (
+            df.columns
+            .str.lower()
+            .str.strip()
+        )
+
+        df = df.fillna("")
+
+        customers = []
+
+        for _, row in df.iterrows():
+
+            status = (
+                str(
+                    row["status"]
+                )
+                .strip()
+                .lower()
+            )
+
+            if status == "active":
+
+                service_status = "Running"
+
+                health = "🟢"
+
+                payment_status = "Paid"
+
+            elif status == "due today":
+
+                service_status = "Running"
+
+                health = "🟠"
+
+                payment_status = "Pending"
+
+            elif status == "overdue":
+
+                service_status = "Stopped"
+
+                health = "🔴"
+
+                payment_status = "Not Received"
+
+            else:
+
+                service_status = "Unknown"
+
+                health = "⚪"
+
+                payment_status = "Unknown"
+
+            customers.append({
+
+                "customer_id":
+                    row.get(
+                        "customer_id",
+                        ""
+                    ),
+
+                "company_name":
+                    row.get(
+                        "company_name",
+                        ""
+                    ),
+
+                "status":
+                    row.get(
+                        "status",
+                        ""
+                    ),
+
+                "payment_status":
+                    payment_status,
+
+                "service_status":
+                    service_status,
+
+                "health":
+                    health,
+
+                "payment_date":
+                    row.get(
+                        "payment_date",
+                        ""
+                    ),
+
+                "days_remaining":
+                    row.get(
+                        "days_remaining",
+                        ""
+                    )
+
+            })
+
+        return jsonify(
+            customers
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+                str(e)
+
+        })
+
+
+
+
+
+
 @app.route("/communications")
 @login_required
 def communications():
