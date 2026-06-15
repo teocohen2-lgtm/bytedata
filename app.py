@@ -115,6 +115,12 @@ COMMUNICATIONS_SHEET_CSV = (
     "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM/"
     "export?format=csv&gid=1403813074"
 )
+
+PAYMENTS_SHEET_CSV = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM/"
+    "export?format=csv&gid=755595798"
+)
 # =====================================
 # LOGIN REQUIRED
 # =====================================
@@ -830,6 +836,65 @@ def export_excel():
         as_attachment=True
     )
 
+
+@app.route("/payments")
+@login_required
+def payments():
+    return render_template(
+        "payments.html"
+    )
+
+payments_cache = None
+payments_cache_time = 0
+
+def get_payments_data():
+
+    global payments_cache
+    global payments_cache_time
+
+    now = time.time()
+
+    if (
+        payments_cache is None
+        or
+        now - payments_cache_time > 60
+    ):
+
+        payments_cache = pd.read_csv(
+            PAYMENTS_SHEET_CSV
+        )
+
+        payments_cache.columns = (
+            payments_cache.columns
+            .str.lower()
+            .str.strip()
+        )
+
+        payments_cache = payments_cache.fillna("")
+
+        payments_cache_time = now
+
+    return payments_cache
+
+@app.route("/payments-data")
+@login_required
+def payments_data():
+
+    df = pd.read_csv(PAYMENTS_SHEET_CSV)
+
+    df.columns = (
+        df.columns
+        .str.lower()
+        .str.strip()
+    )
+
+    df = df.fillna("")
+
+    return jsonify(
+        df.to_dict(
+            orient="records"
+        )
+    )
 # =====================================
 # LOGOUT
 # =====================================

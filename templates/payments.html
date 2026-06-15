@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ByteData Payment Center</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .hero-card {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+
+        color: white;
+
+        border-radius: 20px;
+
+        padding: 30px;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        margin-bottom: 25px;
+      }
+
+      .company-name {
+        font-size: 38px;
+        font-weight: 700;
+      }
+
+      .company-stage {
+        font-size: 18px;
+        margin-top: 8px;
+      }
+
+      .amount-card {
+        background: rgba(255, 255, 255, 0.15);
+
+        padding: 20px;
+
+        border-radius: 16px;
+
+        text-align: center;
+      }
+      body {
+        background: #f8fafc;
+        color: #111827;
+      }
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 260px;
+        background: #fff;
+        border-right: 1px solid #e5e7eb;
+        padding: 24px;
+      }
+      .logo {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .logo img {
+        width: 120px;
+      }
+      .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .menu a {
+        text-decoration: none;
+        color: #374151;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+      }
+      .menu a.active {
+        background: #1a73e8;
+        color: #fff;
+      }
+      .main {
+        flex: 1;
+        padding: 30px;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 18px;
+        margin: 25px 0;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 22px;
+      }
+      .card p {
+        font-size: 28px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+      .table-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background: #f8fafc;
+        padding: 14px;
+        text-align: left;
+      }
+      td {
+        padding: 14px;
+        border-top: 1px solid #e5e7eb;
+      }
+      .btn {
+        background: #1a73e8;
+        color: #fff;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .search input {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+
+      .customer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        width: 100%;
+      }
+
+      .modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .info-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .info-card h3 {
+        margin-bottom: 15px;
+        font-size: 22px;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .days-box {
+        background: #eff6ff;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        min-width: 180px;
+      }
+
+      .days-box span {
+        display: block;
+        font-size: 36px;
+        font-weight: 700;
+        color: #1a73e8;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 999px;
+        margin-top: 10px;
+        font-weight: 600;
+      }
+
+      .action-buttons {
+        display: grid;
+        gap: 12px;
+      }
+
+      .action-buttons button {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .blue-btn {
+        background: #1a73e8;
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .green-btn {
+        background: #16a34a;
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .orange-btn {
+        background: #ea580c;
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .dark-btn {
+        background: #111827;
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .timeline-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .action-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .action-row button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+
+      .close-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .modal-content {
+        width: 90%;
+        max-width: 950px;
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 1000px;
+        max-height: 90vh;
+        overflow-y: auto;
+        overflow: auto;
+      }
+      .info-card {
+        transition: 0.25s;
+      }
+
+      .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      }
+
+      .status-badge {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .payment-stage-pending {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      .payment-stage-received {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .payment-stage-active {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      @media (max-width: 768px) {
+        .modal-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .customer-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+        }
+
+        .days-box {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          display: none;
+        }
+        .kpis {
+          grid-template-columns: 1fr 1fr;
+        }
+        .main {
+          padding: 15px;
+        }
+      }
+      .timeline-step {
+        padding: 14px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .completed {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .waiting {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      .timeline-step {
+        padding: 14px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .completed {
+        background: #dcfce7;
+      }
+
+      .pending {
+        background: #fef3c7;
+      }
+
+      .waiting {
+        background: #f3f4f6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="logo">
+          <img src="/static/logo.png" alt="ByteData Logo" />
+        </div>
+        <div class="menu">
+          <a href="/dashboard">📊 Dashboard</a>
+          <a href="/">✅ Data Verification</a>
+          <a href="/customers">👥 Customers</a>
+          <a href="/communications">💬 Communications</a>
+          <a href="/operations">⚙️ Operations Center</a>
+          <a class="active" href="/payments">💳 Payment Center</a>
+          <a href="/logout">🚪 Logout</a>
+        </div>
+      </div>
+      <div class="main">
+        <h1>Payment Center</h1>
+        <p>Manage onboarding, payments and migrations</p>
+        <div class="kpis">
+          <div class="card">
+            <h3>New Leads</h3>
+            <p id="leadCount">0</p>
+          </div>
+          <div class="card">
+            <h3>Pending</h3>
+            <p id="pendingCount">0</p>
+          </div>
+          <div class="card">
+            <h3>Link Sent</h3>
+            <p id="linkCount">0</p>
+          </div>
+          <div class="card">
+            <h3>Received</h3>
+            <p id="receivedCount">0</p>
+          </div>
+          <div class="card">
+            <h3>Migration</h3>
+            <p id="migrationCount">0</p>
+          </div>
+          <div class="card">
+            <h3>Active</h3>
+            <p id="activeCount">0</p>
+          </div>
+        </div>
+        <div class="search">
+          <input
+            id="search"
+            placeholder="Search company"
+            onkeyup="filterRows()"
+          />
+        </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Payment Stage</th>
+                <th>Link Status</th>
+                <th>Migration</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script>
+      let payments = [];
+
+      async function loadData() {
+        const res = await fetch("/payments-data");
+
+        payments = await res.json();
+
+        updateKPIs();
+
+        render(payments);
+      }
+
+      window.onload = loadData;
+    </script>
+    <script>
+      function render(rows) {
+        let html = "";
+
+        rows.forEach((c) => {
+          html += `
+    <tr>
+        <td>${c.company_name || ""}</td>
+        <td>${c.subscription_plan || ""}</td>
+        <td>${c.currency || ""} ${c.subscription_amount || ""}</td>
+        <td>${c.payment_stage || ""}</td>
+        <td>${c.payment_link_status || ""}</td>
+        <td>${c.migration_status || ""}</td>
+        <td>
+            <button
+                class="btn"
+                onclick="showDetails('${c.customer_id}')"
+            >
+                Details
+            </button>
+        </td>
+    </tr>
+    `;
+        });
+
+        document.getElementById("tableBody").innerHTML = html;
+      }
+    </script>
+    <script>
+      function filterRows() {
+        const q = document.getElementById("search").value.toLowerCase();
+
+        render(
+          payments.filter((x) =>
+            (x.company_name || "").toLowerCase().includes(q)
+          )
+        );
+      }
+    </script>
+    <script>
+      function updateKPIs() {
+        document.getElementById("leadCount").innerText = payments.filter(
+          (x) => x.payment_stage === "New Lead"
+        ).length;
+
+        document.getElementById("pendingCount").innerText = payments.filter(
+          (x) => x.payment_stage === "Payment Pending"
+        ).length;
+
+        document.getElementById("linkCount").innerText = payments.filter(
+          (x) => x.payment_stage === "Payment Link Sent"
+        ).length;
+
+        document.getElementById("receivedCount").innerText = payments.filter(
+          (x) => x.payment_stage === "Payment Received"
+        ).length;
+
+        document.getElementById("migrationCount").innerText = payments.filter(
+          (x) => x.migration_status === "Pending"
+        ).length;
+
+        document.getElementById("activeCount").innerText = payments.filter(
+          (x) => x.status === "Active"
+        ).length;
+      }
+    </script>
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <div class="hero-card">
+          <div>
+            <h1 id="title"></h1>
+
+            <span id="stageBadge"> Payment Pending </span>
+
+            <p>
+              Ref:
+              <span id="paymentRef"></span>
+            </p>
+          </div>
+          <div class="amount-box">
+            <h2 id="amountDue"></h2>
+            <span>Amount Due</span>
+          </div>
+        </div>
+
+        <div class="modal-grid">
+          <!-- LEFT -->
+
+          <div>
+            <div class="info-card">
+              <h3>Customer Information</h3>
+
+              <div class="info-row">
+                <span>Contact Person</span>
+                <b id="contactPerson"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Email</span>
+                <b id="email"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Phone</span>
+                <b id="phone"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Country</span>
+                <b id="country"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Plan</span>
+                <b id="plan"></b>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h3>Payment Details</h3>
+
+              <div class="info-row">
+                <span>Stage</span>
+                <b id="paymentStage"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Link Status</span>
+                <b id="linkStatus"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Sent Date</span>
+                <b id="sentDate"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Received Date</span>
+                <b id="receivedDate"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Next Payment</span>
+                <b id="nextPayment"></b>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+
+          <div>
+            <div class="info-card">
+              <h3>Migration Status</h3>
+
+              <div class="info-row">
+                <span>Migration</span>
+                <b id="migrationStatus"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Migration Date</span>
+                <b id="migrationDate"></b>
+              </div>
+
+              <div class="info-row">
+                <span>Customer Status</span>
+                <b id="customerStatus"></b>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h3>Payment Link</h3>
+
+              <input
+                id="paymentLink"
+                readonly
+                style="
+                  width: 100%;
+                  padding: 12px;
+                  border: 1px solid #d1d5db;
+                  border-radius: 10px;
+                "
+              />
+
+              <div class="action-row">
+                <button class="blue-btn" onclick="copyLink()">Copy</button>
+
+                <button class="green-btn" onclick="openLink()">Open</button>
+
+                <button class="orange-btn" onclick="testLink()">Test</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3>Workflow Timeline</h3>
+
+          <div id="timelineArea"></div>
+        </div>
+
+        <div class="info-card">
+          <h3>Actions</h3>
+
+          <div class="action-buttons" id="actionArea"></div>
+        </div>
+
+        <div style="margin-top: 20px">
+          <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      let current = null;
+
+      function buildActions() {
+        let html = "";
+
+        const stage = current.payment_stage;
+
+        if (stage === "New Lead") {
+          html += `
+    <button class="blue-btn">
+      Generate Payment Link
+    </button>
+  `;
+        } else if (stage === "Payment Pending") {
+          html += `
+   <button
+    class="orange-btn"
+    onclick="sendReminder()"
+>
+    📧 Send Reminder
+</button>
+
+<button
+    class="blue-btn"
+    onclick="generateNewLink()"
+>
+    Generate New Link
+</button>
+  `;
+        } else if (stage === "Payment Received") {
+          html += `
+    <button class="green-btn">
+      Verify Payment
+    </button>
+
+    <button class="blue-btn">
+      Start Migration
+    </button>
+  `;
+        } else if (stage === "Migration Pending") {
+          html += `
+    <button class="green-btn">
+      Start Migration
+    </button>
+  `;
+        } else if (stage === "Active") {
+          html += `
+    <button class="dark-btn">
+      ✓ Customer Active
+    </button>
+  `;
+        }
+
+        document.getElementById("actionArea").innerHTML = html;
+      }
+
+      function buildTimeline() {
+        document.getElementById("timelineArea").innerHTML = `
+
+<div class="timeline-step completed">
+🟢 Lead Created
+</div>
+
+<div class="timeline-step completed">
+🟢 Link Generated
+</div>
+
+<div class="timeline-step completed">
+🟢 Link Sent
+</div>
+
+<div class="timeline-step pending">
+🟡 Payment Pending
+</div>
+
+<div class="timeline-step waiting">
+⚪ Migration Pending
+</div>
+
+`;
+      }
+
+      function showDetails(customerId) {
+        current = payments.find(
+          (p) => String(p.customer_id) === String(customerId)
+        );
+
+        if (!current) {
+          alert("Customer not found");
+          return;
+        }
+
+        document.getElementById("title").innerText = current.company_name || "";
+
+        document.getElementById("paymentRef").innerText =
+          current.payment_reference || "N/A";
+
+        document.getElementById("amountDue").innerText = `${
+          current.currency || ""
+        } ${current.subscription_amount || ""}`;
+
+        document.getElementById("contactPerson").innerText =
+          current.contact_person || "";
+
+        document.getElementById("email").innerText = current.email || "";
+
+        document.getElementById("phone").innerText = current.phone || "";
+
+        document.getElementById("country").innerText = current.country || "";
+
+        document.getElementById("plan").innerText =
+          current.subscription_plan || "";
+
+        document.getElementById("paymentStage").innerText =
+          current.payment_stage || "";
+
+        document.getElementById("linkStatus").innerText =
+          current.payment_link_status || "";
+
+        document.getElementById("sentDate").innerText =
+          current.payment_sent_date || "-";
+
+        document.getElementById("receivedDate").innerText =
+          current.payment_received_date || "-";
+
+        document.getElementById("nextPayment").innerText =
+          current.next_payment_date || "-";
+
+        document.getElementById("migrationStatus").innerText =
+          current.migration_status || "-";
+
+        document.getElementById("migrationDate").innerText =
+          current.migration_date || "-";
+
+        document.getElementById("customerStatus").innerText =
+          current.status || "-";
+
+        document.getElementById("paymentLink").value =
+          current.payment_link || "";
+
+        buildTimeline();
+
+        buildActions();
+
+        document.getElementById("modal").style.display = "flex";
+      }
+    </script>
+    <script>
+      function sendReminder() {
+        alert("Reminder sent successfully");
+      }
+      function generateLink() {
+        alert("New payment link generated");
+      }
+
+      function startMigration() {
+        alert("Migration started");
+      }
+
+      function verifyPayment() {
+        alert("Payment verified");
+      }
+      function generateNewLink() {
+        alert("New payment link generated");
+      }
+    </script>
+    <script>
+      function copyLink() {
+        const link = document.getElementById("paymentLink").value;
+
+        navigator.clipboard.writeText(link);
+
+        alert("Payment link copied successfully");
+      }
+
+      function openLink() {
+        const link = document.getElementById("paymentLink").value;
+
+        if (!link) {
+          alert("No payment link found");
+          return;
+        }
+
+        window.open(link, "_blank");
+      }
+
+      function testLink() {
+        const btn = event.target;
+
+        btn.innerText = "Testing...";
+
+        btn.disabled = true;
+
+        setTimeout(() => {
+          btn.innerText = "✅ Valid";
+
+          btn.disabled = false;
+
+          alert("Payment link is working");
+        }, 2000);
+      }
+
+      function closeModal() {
+        document.getElementById("modal").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
