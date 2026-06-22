@@ -355,7 +355,10 @@
             Send Reply
           </button>
 
-          <button class="btn close-btn" onclick="closeTicket()">
+          <button
+            class="btn close-btn"
+            onclick="closeTicket('${msg.message_id}')"
+          >
             Close Ticket
           </button>
 
@@ -391,7 +394,6 @@
 
         tickets = await res.json();
 
-        console.log("ALL TICKETS", tickets);
         updateKPIs();
 
         let html = "";
@@ -459,7 +461,7 @@ Open Ticket
       //   document.getElementById("ticketModal").style.display = "block";
       // }
 
-      function openTicket(index) {
+      async function openTicket(index) {
         selectedTicket = tickets[index];
 
         document.getElementById("companyName").innerText =
@@ -552,63 +554,75 @@ Cancel
       //   alert("Ticket Closed Successfully");
       // }
 
-      function closeTicket() {
-        selectedTicket.status = "Closed";
+      async function closeTicket() {
+        if (!selectedTicket) {
+          return;
+        }
 
-        hideModal();
-
-        let html = "";
-
-        tickets.forEach((ticket, index) => {
-          if ((ticket.status || "").toLowerCase() === "closed") {
-            return;
-          }
-
-          html += `
-
-<div class="ticket">
-
-<div>
-
-<h3>
-${ticket.company_name}
-</h3>
-
-<div>
-${ticket.subject}
-</div>
-
-<br>
-
-<div class="
-priority-${(ticket.priority || "").toLowerCase()}
-">
-
-${ticket.priority}
-
-</div>
-
-</div>
-
-<div>
-
-<button
-class="open-btn"
-onclick="openTicket(${index})"
->
-Open Ticket
-</button>
-
-</div>
-
-</div>
-
-`;
+        const res = await fetch("/close-ticket", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message_id: selectedTicket.message_id,
+          }),
         });
 
-        document.getElementById("ticketList").innerHTML = html;
+        const result = await res.json();
 
-        alert("Ticket Closed Successfully");
+        if (result.status === "success") {
+          selectedTicket.status = "Closed";
+
+          let html = "";
+
+          tickets.forEach((ticket, index) => {
+            if ((ticket.status || "").toLowerCase() === "closed") {
+              return;
+            }
+
+            html += `
+        <div class="ticket">
+
+            <div>
+
+                <h3>${ticket.company_name}</h3>
+
+                <div>${ticket.subject}</div>
+
+                <br>
+
+                <div class="
+                priority-${(ticket.priority || "").toLowerCase()}
+                ">
+                    ${ticket.priority}
+                </div>
+
+            </div>
+
+            <div>
+
+                <button
+                class="open-btn"
+                onclick="openTicket(${index})">
+                    Open Ticket
+                </button>
+
+            </div>
+
+        </div>
+        `;
+          });
+
+          loadTickets();
+
+          document.getElementById("ticketList").innerHTML = html;
+
+          // alert("Ticket Closed Successfully");
+          hideModal();
+        } else {
+          alert(result.message);
+        }
       }
 
       loadTickets();

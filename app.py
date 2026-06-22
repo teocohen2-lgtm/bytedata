@@ -1125,10 +1125,107 @@ def verification_stats():
         "maureene": maureene
 
     })
-    
-@app.route("/test123")
-def test123():
-    return "HELLO PRAMOD"
+
+
+@app.route("/close-ticket", methods=["POST"])
+@login_required
+def close_ticket():
+
+    try:
+
+        message_id = str(
+            request.json.get("message_id")
+        ).strip()
+
+        spreadsheet = gc.open_by_key(
+            "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+        )
+
+        sheet = spreadsheet.worksheet(
+            "CustomerMessages"
+        )
+
+        all_rows = sheet.get_all_values()
+
+        headers = [
+            h.strip().lower()
+            for h in all_rows[0]
+        ]
+
+        print("HEADERS:", headers)
+
+        message_id_col = headers.index(
+            "message_id"
+        )
+
+        status_col = headers.index(
+            "status"
+        )
+
+        last_updated_col = headers.index(
+            "last_updated"
+        )
+
+        target_row = None
+
+        for row_num, row in enumerate(
+            all_rows[1:],
+            start=2
+        ):
+
+            if len(row) > message_id_col:
+
+                if str(
+                    row[message_id_col]
+                ).strip() == message_id:
+
+                    target_row = row_num
+
+                    break
+
+        print(
+            "MESSAGE ID:",
+            message_id
+        )
+
+        print(
+            "TARGET ROW:",
+            target_row
+        )
+
+        if target_row is None:
+
+            return jsonify({
+                "status": "error",
+                "message": "Ticket Not Found"
+            })
+
+        sheet.update_cell(
+            target_row,
+            status_col + 1,
+            "Closed"
+        )
+
+        sheet.update_cell(
+            target_row,
+            last_updated_col + 1,
+            datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+        )
+
+        return jsonify({
+            "status": "success"
+        })
+
+    except Exception as e:
+
+        print(e)
+
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
 
 
 # =====================================
@@ -1168,5 +1265,5 @@ if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
         port=5005,
-        debug=True
+        debug=False
     )
