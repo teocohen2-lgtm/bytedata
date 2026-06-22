@@ -8,6 +8,9 @@ import os
 from notification_service import check_new_tickets
 from apscheduler.schedulers.background import BackgroundScheduler
 import time
+import gspread
+from google.oauth2.service_account import Credentials
+from pandasql import sqldf
 
 
  
@@ -19,6 +22,28 @@ last_load = 0
 # if os.environ.get(
 #     "WERKZEUG_RUN_MAIN"
 # ) == "true":
+
+app.secret_key = "bytedata_secure_session_key"
+
+SCOPES = [
+
+    "https://www.googleapis.com/auth/spreadsheets",
+
+    "https://www.googleapis.com/auth/drive"
+
+]
+
+creds = Credentials.from_service_account_file(
+
+    "credentials.json",
+
+    scopes=SCOPES
+
+)
+
+gc = gspread.authorize(
+    creds
+)
 
 scheduler = BackgroundScheduler()
 
@@ -70,6 +95,20 @@ def get_sheet_data():
         last_load = current_time
 
     return cached_df
+
+def get_main_sheet():
+
+    spreadsheet = gc.open_by_key(
+
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+
+    )
+
+    worksheet = spreadsheet.get_worksheet(
+        0
+    )
+
+    return worksheet
 
 def load_progress():
 
@@ -895,6 +934,131 @@ def payments_data():
             orient="records"
         )
     )
+
+@app.route(
+    "/update-sheet-row",
+    methods=["POST"]
+)
+@login_required
+def update_sheet_row():
+
+    try:
+
+        data = request.json
+
+        row_id = str(
+            data.get("id")
+        )
+
+        sheet = get_main_sheet()
+
+        records = sheet.get_all_records()
+
+        target_row = None
+
+        for index, row in enumerate(records):
+
+            if str(row.get("id")) == row_id:
+
+                target_row = index + 2
+
+                break
+
+        if not target_row:
+
+            return jsonify({
+
+                "status":"error",
+
+                "message":"Row not found"
+
+            })
+
+        headers = sheet.row_values(1)
+
+        updates = []
+
+        for col_index, header in enumerate(headers):
+
+            value = data.get(
+                header,
+                ""
+            )
+
+            updates.append({
+                "range":
+                    gspread.utils.rowcol_to_a1(
+                        target_row,
+                        col_index + 1
+                    ),
+                "values":
+                    [[str(value)]]
+            })
+
+        sheet.batch_update(updates)
+
+        return jsonify({
+
+            "status":"success"
+
+        })
+
+    except Exception as e:
+
+        return jsonify({
+
+            "status":"error",
+
+            "message":str(e)
+
+        })
+    
+@app.route(
+    "/run-query",
+    methods=["POST"]
+)
+@login_required
+def run_query():
+
+    try:
+
+        query = request.json.get(
+            "query"
+        )
+
+        df = get_sheet_data()
+
+        result = sqldf(
+            query,
+            {
+                "data": df
+            }
+        )
+
+        return jsonify({
+
+            "status":"success",
+
+            "rows":
+                result.fillna("")
+                .to_dict(
+                    orient="records"
+                )
+
+        })
+
+    except Exception as e:
+
+        return jsonify({
+
+            "status":"error",
+
+            "message":str(e)
+
+        })
+    
+
+
 # =====================================
 # LOGOUT
 # =====================================
@@ -931,6 +1095,6 @@ if __name__ == "__main__":
 
     app.run(
         host="127.0.0.1",
-        port=5000,
+        port=5005,
         debug=False
     )

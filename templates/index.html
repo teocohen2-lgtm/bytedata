@@ -31,6 +31,125 @@
         color: white;
       }
 
+      .sql-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .sql-window {
+        width: 95%;
+        max-width: 1600px;
+        height: 90vh;
+
+        background: white;
+        border-radius: 20px;
+
+        overflow: hidden;
+
+        display: flex;
+        flex-direction: column;
+
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      .sql-editor {
+        width: 100%;
+        height: 180px;
+
+        resize: none;
+
+        background: #0f172a;
+        color: #e2e8f0;
+
+        border: none;
+
+        border-radius: 12px;
+
+        padding: 20px;
+
+        font-family: Consolas;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .blue-btn {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .green-btn {
+        background: #16a34a;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .close-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .sql-actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .query-results {
+        flex: 1;
+        overflow: auto;
+        margin-top: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+      }
+
+      .result-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .result-table tr:hover {
+        background: #eff6ff;
+      }
+
+      .result-table td {
+        white-space: nowrap;
+      }
+
+      .result-table th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .result-table th {
+        background: #1a73e8;
+        color: white;
+      }
+
+      .result-table th,
+      .result-table td {
+        padding: 10px;
+        border: 1px solid #e5e7eb;
+        white-space: nowrap;
+      }
+
       /* =====================================
    RESPONSIVE MOBILE + TABLET
 ===================================== */
@@ -436,8 +555,11 @@
               Export Excel
             </button>
 
-            <button class="verify-btn" onclick="verifyRow()">
+            <button class="verify-btn" onclick="saveToGoogleSheet()">
               Save & Verify
+            </button>
+            <button class="verify-btn" onclick="openSQLModal()">
+              🗄 SQL Database
             </button>
           </div>
         </div>
@@ -452,6 +574,154 @@ No Data Loaded
             </pre
           >
         </div>
+      </div>
+    </div>
+    <div id="sqlModal" class="sql-modal">
+      <div class="sql-window">
+        <!-- TOP BAR -->
+
+        <div
+          style="
+            height: 42px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 14px;
+            font-weight: 600;
+          "
+        >
+          <div>🗄 ByteData SQL Studio</div>
+
+          <div style="color: #16a34a">● Connected : DB</div>
+        </div>
+
+        <!-- TITLE -->
+
+        <div
+          style="
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div style="font-size: 20px; font-weight: 600">SQL Query Studio</div>
+
+          <button
+            onclick="closeSQLModal()"
+            style="
+              width: 32px;
+              height: 32px;
+              border: none;
+              background: #ef4444;
+              color: white;
+              cursor: pointer;
+              border-radius: 4px;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- SQL EDITOR -->
+
+        <div style="padding: 15px; border-bottom: 1px solid #e5e7eb">
+          <textarea
+            id="sqlQuery"
+            style="
+              width: 100%;
+              height: 110px;
+              resize: none;
+              border: 1px solid #d1d5db;
+              padding: 12px;
+              font-family: Consolas, monospace;
+              font-size: 14px;
+              background: white;
+              color: #111827;
+              outline: none;
+            "
+          >
+SELECT *
+FROM data
+LIMIT 20
+</textarea
+          >
+        </div>
+
+        <!-- TOOLBAR -->
+
+        <div
+          style="
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #e5e7eb;
+          "
+        >
+          <button
+            onclick="runSQLQuery()"
+            style="
+              height: 30px;
+              padding: 0 12px;
+              border: 1px solid #2563eb;
+              background: #2563eb;
+              color: white;
+              cursor: pointer;
+            "
+          >
+            Run
+          </button>
+
+          <button
+            onclick="loadExample()"
+            style="
+              height: 30px;
+              padding: 0 12px;
+              border: 1px solid #d1d5db;
+              background: white;
+              cursor: pointer;
+            "
+          >
+            Example
+          </button>
+
+          <div style="margin-left: 20px; color: #6b7280; font-size: 13px">
+            Rows: <b id="sqlRows">0</b> &nbsp;&nbsp;| &nbsp;&nbsp;Time:
+            <b id="sqlTime">0.00s</b> &nbsp;&nbsp;| &nbsp;&nbsp;Source:
+            <b>DATA DB</b>
+          </div>
+        </div>
+
+        <!-- RESULTS HEADER -->
+
+        <div
+          style="
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+          "
+        >
+          <div>Results</div>
+
+          <div id="sqlResultCount">0 Rows Returned</div>
+        </div>
+
+        <!-- RESULTS -->
+
+        <div
+          id="queryResults"
+          style="flex: 1; overflow: auto; background: white"
+        ></div>
       </div>
     </div>
 
@@ -685,6 +955,130 @@ No Data Loaded
 
       function goDashboard() {
         window.location.href = "/dashboard";
+      }
+    </script>
+    <script>
+      async function saveToGoogleSheet() {
+        const validationErrors = validateData();
+
+        if (validationErrors.length > 0) {
+          alert("Please fill in all required fields before proceeding.");
+          errorBox.style.display = "block";
+
+          errorBox.innerHTML = `
+
+            <b>
+                Validation Errors:
+            </b>
+
+            <br><br>
+
+            ${validationErrors.join("<br>")}
+
+        `;
+
+          return;
+        }
+
+        const payload = currentRow;
+
+        const res = await fetch("/update-sheet-row", {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+
+        if (result.status === "success") {
+          alert("✅ Verify and Saved Succefuly on server ");
+          verifiedCount++;
+
+          verifiedCounter.innerText = verifiedCount;
+
+          successBox.style.display = "block";
+
+          setTimeout(async () => {
+            await fetchNextRow();
+          }, 700);
+        } else {
+          alert(result.message);
+        }
+      }
+    </script>
+    <script>
+      async function runSQLQuery() {
+        const query = document.getElementById("sqlQuery").value;
+
+        const res = await fetch("/run-query", {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            query,
+          }),
+        });
+
+        const result = await res.json();
+
+        if (result.status !== "success") {
+          alert(result.message);
+
+          return;
+        }
+
+        renderQueryTable(result.rows);
+      }
+
+      function renderQueryTable(rows) {
+        if (rows.length === 0) {
+          document.getElementById("queryResults").innerHTML =
+            "<p>No Results</p>";
+
+          return;
+        }
+
+        let headers = Object.keys(rows[0]);
+
+        let html = `
+<table class="result-table">
+<thead>
+<tr>
+`;
+
+        headers.forEach((h) => {
+          html += `<th>${h}</th>`;
+        });
+
+        html += "</tr></thead><tbody>";
+
+        rows.forEach((r) => {
+          html += "<tr>";
+
+          headers.forEach((h) => {
+            html += `<td>${r[h]}</td>`;
+          });
+
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+
+        document.getElementById("queryResults").innerHTML = html;
+      }
+      function openSQLModal() {
+        document.getElementById("sqlModal").style.display = "flex";
+      }
+
+      function closeSQLModal() {
+        document.getElementById("sqlModal").style.display = "none";
       }
     </script>
   </body>

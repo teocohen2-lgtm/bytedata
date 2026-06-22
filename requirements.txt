@@ -4,3 +4,6 @@ openpyxl
 gunicorn
 requests
 apscheduler
+gspread
+google-auth
+pandasql
