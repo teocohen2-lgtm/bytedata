@@ -145,7 +145,7 @@
 
       .cards {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 18px;
         margin-bottom: 30px;
       }
@@ -452,6 +452,16 @@
             <h3>Total Revenue</h3>
             <p id="totalRevenue">$0</p>
           </div>
+
+          <div class="card">
+            <h3>Maricar Row Count</h3>
+            <p id="maricarCount">0</p>
+          </div>
+
+          <div class="card">
+            <h3>Maureene Row Count</h3>
+            <p id="maureeneCount">0</p>
+          </div>
         </div>
 
         <div class="content-grid">
@@ -544,6 +554,24 @@
       });
 
       loadDashboard();
+    </script>
+    <script>
+      async function loadVerificationStats() {
+        const res = await fetch("/verification-stats");
+
+        const data = await res.json();
+
+        console.log(data);
+
+        document.getElementById("maricarCount").innerText = data.maricar;
+
+        document.getElementById("maureeneCount").innerText = data.maureene;
+      }
+
+      loadVerificationStats();
+    </script>
+    <script>
+      alert("NEW DASHBOARD FILE LOADED");
     </script>
   </body>
 </html>

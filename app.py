@@ -11,6 +11,8 @@ import time
 import gspread
 from google.oauth2.service_account import Credentials
 from pandasql import sqldf
+from datetime import datetime
+
 
 
  
@@ -22,6 +24,8 @@ last_load = 0
 # if os.environ.get(
 #     "WERKZEUG_RUN_MAIN"
 # ) == "true":
+
+
 
 app.secret_key = "bytedata_secure_session_key"
 
@@ -35,9 +39,9 @@ SCOPES = [
 
 creds = Credentials.from_service_account_file(
 
-    # "credentials.json",
+    "credentials.json",
 
-    "/etc/secrets/credentials.json",
+    # "/etc/secrets/credentials.json",
 
     scopes=SCOPES
 
@@ -285,6 +289,12 @@ def home():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+
+    # return """
+    # <h1 style='color:red'>
+    # DASHBOARD ROUTE TEST
+    # </h1>
+    # """
 
     return render_template(
         "dashboard.html"
@@ -948,9 +958,15 @@ def update_sheet_row():
 
         data = request.json
 
+        data["verified"] = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
         row_id = str(
             data.get("id")
         )
+
+   
 
         sheet = get_main_sheet()
 
@@ -1060,6 +1076,60 @@ def run_query():
         })
     
 
+@app.route("/verification-stats")
+@login_required
+def verification_stats():
+
+    df = get_sheet_data()
+
+    df.columns = (
+        df.columns
+        .str.lower()
+        .str.strip()
+    )
+
+    today = datetime.now().strftime(
+        "%Y-%m-%d"
+    )
+
+    df = df.fillna("")
+
+    maricar = len(
+        df[
+            (df["assign"].str.lower() == "maricar")
+            &
+            (
+                df["verified"]
+                .astype(str)
+                .str.startswith(today)
+            )
+        ]
+    )
+
+    maureene = len(
+        df[
+            (df["assign"].str.lower() == "maureene")
+            &
+            (
+                df["verified"]
+                .astype(str)
+                .str.startswith(today)
+            )
+        ]
+    )
+
+    return jsonify({
+
+        "maricar": maricar,
+
+        "maureene": maureene
+
+    })
+    
+@app.route("/test123")
+def test123():
+    return "HELLO PRAMOD"
+
 
 # =====================================
 # LOGOUT
@@ -1098,5 +1168,5 @@ if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
         port=5005,
-        debug=False
+        debug=True
     )

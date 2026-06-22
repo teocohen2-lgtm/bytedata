@@ -260,6 +260,15 @@
             <h4>Total Revenue</h4>
             <h2 id="totalRevenue">$0</h2>
           </div>
+          <!-- <div class="card">
+            <h3>Maricar Row Count</h3>
+            <p id="maricarCount">0</p>
+          </div>
+
+          <div class="card">
+            <h3>Maureene Row Count</h3>
+            <p id="maureeneCount">0</p>
+          </div> -->
         </div>
 
         <div class="grid2">
@@ -282,6 +291,10 @@
             <h3>Team Performance</h3>
 
             <div style="height: 260px">
+              <div style="flex-direction: row; padding: 5px">
+                <h6>Maricar Row Count: <span id="maricarCount">0</span></h6>
+                <h6>Maureene Row Count: <span id="maureeneCount">0</span></h6>
+              </div>
               <canvas id="teamChart"></canvas>
             </div>
           </div>
@@ -379,6 +392,21 @@
 
       loadDashboard();
       loadAnalytics();
+    </script>
+    <script>
+      async function loadVerificationStats() {
+        const res = await fetch("/verification-stats");
+
+        const data = await res.json();
+
+        console.log(data);
+
+        document.getElementById("maricarCount").innerText = data.maricar;
+
+        document.getElementById("maureeneCount").innerText = data.maureene;
+      }
+
+      loadVerificationStats();
     </script>
   </body>
 </html>
