@@ -35,7 +35,9 @@ SCOPES = [
 
 creds = Credentials.from_service_account_file(
 
-    "credentials.json",
+    # "credentials.json",
+
+    "/etc/secrets/credentials.json",
 
     scopes=SCOPES
 
