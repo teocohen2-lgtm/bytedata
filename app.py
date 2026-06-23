@@ -734,6 +734,16 @@ def fetch_next_row():
 
         df.columns = df.columns.str.lower()
 
+        print("USER:", logged_user)
+
+        print(
+            df[["assign", "verified"]]
+            .head(20)
+        )
+
+        print(df.columns.tolist())
+
+
         # FILTER USER ROWS
 
         user_rows = df[
@@ -744,42 +754,25 @@ def fetch_next_row():
 
         # GET POINTER
 
-        current_index = session.get(
-            "current_index",
-            0
-        )
+        user_rows = user_rows[
+        user_rows["verified"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        == "secured"
+        ]
 
-        # NO MORE ROWS
+        print("ROWS FOUND:", len(user_rows))
 
-        if current_index >= len(user_rows):
+
+        if len(user_rows) == 0:
 
             return jsonify({
-
-                "status":"finished",
-
-                "message":"No More Rows"
-
+                "status": "finished",
+                "message": "No More Rows"
             })
-
-        # GET ROW
-
-        row = user_rows.iloc[
-            current_index
-        ].to_dict()
-
-        # INCREASE POINTER
-
-        # session["current_index"] = current_index + 1
-
-        new_index = current_index + 1
-
-        session["current_index"] = new_index
-
-        progress = load_progress()
-
-        progress[logged_user] = new_index
-
-        save_progress(progress)
+        
+        row = user_rows.iloc[0].to_dict()
 
         return jsonify({
 
