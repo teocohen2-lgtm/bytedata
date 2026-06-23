@@ -730,6 +730,9 @@ def fetch_next_row():
         #     GOOGLE_SHEET_CSV
         # )
 
+        global cached_df
+        cached_df = None
+
         df = get_sheet_data()
 
         df.columns = df.columns.str.lower()
@@ -1007,7 +1010,8 @@ def update_sheet_row():
             })
 
         sheet.batch_update(updates)
-
+        global cached_df
+        cached_df = None
         return jsonify({
 
             "status":"success"
