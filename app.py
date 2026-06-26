@@ -467,9 +467,9 @@ if __name__ == "__main__":
                         "Yes"
                     )
 
-                    print(
-                        f"Renewal Created: {renewal_lead_id}"
-                    )
+                    # print(
+                    #     f"Renewal Created: {renewal_lead_id}"
+                    # )
 
                     
 
@@ -515,59 +515,32 @@ if __name__ == "__main__":
             )
 
 
+        scheduler = BackgroundScheduler()
 
+        scheduler.add_job(
+            check_new_tickets,
+            "interval",
+            hours=8
+        )
 
+        scheduler.add_job(
+            process_leads,
+            "interval",
+            hours= 1
+        )
 
+        scheduler.add_job(
+            process_customer_renewals,
+            "interval",
+            hours= 4
 
+        )
 
+        scheduler.start()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-scheduler = BackgroundScheduler()
-
-scheduler.add_job(
-    check_new_tickets,
-    "interval",
-    hours=8
-)
-
-scheduler.add_job(
-    process_leads,
-    "interval",
-    hours= 1
-    # hours=1
-)
-
-scheduler.add_job(
-    process_customer_renewals,
-    "interval",
-    hours= 4
-
- )
-
-scheduler.start()
-
-print(
-    "Notification Scheduler Started"
-)
+    print(
+        "Notification Scheduler Started"
+    )
 
 all_data = []
 
@@ -693,7 +666,7 @@ PAYMENT_FOLLOWUP_CSV = (
 )
 
 
-print(PAYMENT_FOLLOWUP_CSV)
+# print(PAYMENT_FOLLOWUP_CSV)
 
 
 # =====================================
