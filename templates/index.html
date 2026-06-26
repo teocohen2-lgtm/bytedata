@@ -515,10 +515,13 @@
         <div class="menu">
           <a class="active" href="/dashboard">📊 Dashboard</a>
           <a href="/">✅ Data Verification</a>
+          {% if role == "admin" %}
+
           <a href="/customers">👥 Customers</a>
           <a href="/communications">💬 Communications</a>
           <a href="/operations">⚙️ Operations Center</a>
           <a href="/payments">💳 Payment Center</a>
+          {% endif %}
 
           <!-- <a href="/analytics">📈 Analytics</a>
           <a href="/reports">📄 Reports</a>

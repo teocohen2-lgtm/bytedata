@@ -408,10 +408,13 @@
         <div class="menu">
           <a href="/dashboard">📊 Dashboard</a>
           <a href="/">✅ Data Verification</a>
+          {% if role == "admin" %}
+
           <a href="/customers">👥 Customers</a>
           <a href="/communications">💬 Communications</a>
           <a href="/operations">⚙️ Operations Center</a>
           <a class="active" href="/payments">💳 Payment Center</a>
+          {% endif %}
           <a href="/logout">🚪 Logout</a>
         </div>
       </div>

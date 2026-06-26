@@ -72,6 +72,11 @@ PROGRESS_FILE = "progress.json"
 
 app.secret_key = "bytedata_secure_session_key"
 
+
+def is_admin():
+    return session.get("role") == "admin"
+
+
 def get_sheet_data():
 
     global cached_df
@@ -234,9 +239,13 @@ def login_user():
             # # RESET POINTER
 
             # session["current_index"] = 0
+            role = str(
+                user_row.iloc[0]["role"]
+            ).lower()
             session["logged_in"] = True
 
             session["username"] = username.lower()
+            session["role"] = role.lower()
 
             progress = load_progress()
 
@@ -278,8 +287,11 @@ def login_user():
 @login_required
 def home():
 
+
     return render_template(
-        "index.html"
+        "index.html",
+        role=session.get("role")
+
     )
 
 # =====================================
@@ -289,6 +301,7 @@ def home():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+     
 
     # return """
     # <h1 style='color:red'>
@@ -297,7 +310,9 @@ def dashboard():
     # """
 
     return render_template(
-        "dashboard.html"
+        "dashboard.html",
+         role=session.get("role")
+
     )
 
 
@@ -306,8 +321,14 @@ def dashboard():
 @app.route("/operations")
 @login_required
 def operations():
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+    
     return render_template(
-        "operations.html"
+        "operations.html",
+        role=session.get("role")
     )
 
 @app.route("/operations-data")
@@ -436,7 +457,12 @@ def operations_data():
 @app.route("/communications")
 @login_required
 def communications():
-    return render_template("communications.html")
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+    
+    return render_template("communications.html" , role=session.get("role")
+)
 
 
 @app.route("/communications-data")
@@ -497,8 +523,13 @@ def communications_data():
 @login_required
 def customers():
 
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+
+
     return render_template(
-        "customers.html"
+        "customers.html",
+        role=session.get("role")
     )
 
 # =====================================
@@ -723,7 +754,7 @@ def fetch_next_row():
     try:
 
         logged_user = session.get(
-            "username"
+            "username",
         ).lower()
 
         # df = pd.read_csv(
@@ -887,8 +918,15 @@ def export_excel():
 @app.route("/payments")
 @login_required
 def payments():
+
+
+    if session.get("role") != "admin":
+        return redirect("/dashboard")
+    
     return render_template(
-        "payments.html"
+        "payments.html",
+        role=session.get("role")
+
     )
 
 payments_cache = None
