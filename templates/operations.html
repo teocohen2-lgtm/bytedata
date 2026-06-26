@@ -346,25 +346,25 @@
       </div>
       <div class="main">
         <div class="header">
-          <h1>Operations Center</h1>
-          <p>Monitor services, payments and customer operations</p>
+          <h1>Payment Operations Center</h1>
+          <p>Monitor payment follow ups, reminders and onboarding activities</p>
         </div>
 
         <div class="kpis">
           <div class="card">
-            <h3>Total Services</h3>
+            <h3>Pending Payments</h3>
             <p id="total">0</p>
           </div>
           <div class="card">
-            <h3>Healthy</h3>
+            <h3>Card Declined</h3>
             <p id="healthy">0</p>
           </div>
           <div class="card">
-            <h3>Warning</h3>
+            <h3>Payment Expired</h3>
             <p id="warning">0</p>
           </div>
           <div class="card">
-            <h3>Stopped</h3>
+            <h3>No Response</h3>
             <p id="stopped">0</p>
           </div>
         </div>
@@ -382,11 +382,11 @@
             <thead>
               <tr>
                 <th>Company</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th>Service</th>
-                <th>Health</th>
-                <th>Payment Date</th>
+                <th>Plan</th>
+                <th>Issue Type</th>
+                <th>Payment Status</th>
+                <th>Assigned To</th>
+                <th>Last Contact</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -406,7 +406,7 @@
 
           <div class="days-box">
             <span id="daysRemaining">0</span>
-            <small>Days Remaining</small>
+            <small>Days Open</small>
           </div>
         </div>
 
@@ -423,17 +423,17 @@
               </div>
 
               <div class="info-row">
-                <span>Payment Date</span>
+                <span>Issue Type</span>
                 <b id="paymentDate"></b>
               </div>
 
               <div class="info-row">
-                <span>Renewal Amount</span>
+                <span>Assigned To</span>
                 <b id="renewalAmount"></b>
               </div>
 
               <div class="info-row">
-                <span>Service Status</span>
+                <span>Payment Reference</span>
                 <b id="serviceStatus"></b>
               </div>
             </div>
@@ -450,11 +450,21 @@
                   🔗 Payment Link
                 </button>
 
-                <button class="orange-btn" onclick="restartService()">
+                <!-- <button class="orange-btn" onclick="restartService()">
                   🔄 Restart Service
+                </button> -->
+                <button class="orange-btn" onclick="checkPaymentStatus()">
+                  💳 Check Payment Status
                 </button>
 
-                <button class="dark-btn">✓ Mark Paid</button>
+                <button
+                  class="dark-btn"
+                  id="markPaidBtn"
+                  onclick="markPaid()"
+                  disabled
+                >
+                  ✓ Mark Paid
+                </button>
               </div>
             </div>
           </div>
@@ -463,27 +473,27 @@
 
           <div>
             <div class="info-card">
-              <h3>Service Health</h3>
+              <h3>Bank Verification</h3>
 
               <div id="healthResults">
                 <div class="health-item">
-                  API Endpoint
+                  Bank Connection
                   <span>⚪ Not Tested</span>
                 </div>
 
                 <div class="health-item">
-                  Database
+                  Payment Verification
                   <span>⚪ Not Tested</span>
                 </div>
 
                 <div class="health-item">
-                  Payment Gateway
+                  Fraud Check
                   <span>⚪ Not Tested</span>
                 </div>
               </div>
 
               <button class="health-btn" onclick="runHealthCheck()">
-                Run Health Check
+                Check Payment Status
               </button>
             </div>
 
@@ -491,11 +501,11 @@
               <h3>Recent Activity</h3>
 
               <div class="timeline">
-                <div class="timeline-item">Payment reminder sent</div>
+                <div class="timeline-item">Payment link sent</div>
 
-                <div class="timeline-item">Health check completed</div>
+                <div class="timeline-item">Reminder sent</div>
 
-                <div class="timeline-item">Service restarted</div>
+                <div class="timeline-item">Awaiting payment confirmation</div>
               </div>
             </div>
           </div>
@@ -510,39 +520,67 @@
     <script>
       let customers = [];
       let current = null;
+      let paymentVerified = false;
 
       async function loadData() {
         const res = await fetch("/operations-data");
+
         customers = await res.json();
 
         document.getElementById("total").innerText = customers.length;
-        document.getElementById("healthy").innerText = customers.filter((x) =>
-          String(x.health).includes("🟢")
+
+        document.getElementById("healthy").innerText = customers.filter(
+          (x) => String(x.issue_type).toLowerCase() === "card declined"
         ).length;
-        document.getElementById("warning").innerText = customers.filter((x) =>
-          String(x.health).includes("🟠")
+
+        document.getElementById("warning").innerText = customers.filter(
+          (x) => String(x.issue_type).toLowerCase() === "payment link expired"
         ).length;
-        document.getElementById("stopped").innerText = customers.filter((x) =>
-          String(x.health).includes("🔴")
+
+        document.getElementById("stopped").innerText = customers.filter(
+          (x) =>
+            String(x.issue_type).toLowerCase() === "customer not responding"
         ).length;
+
         render(customers);
       }
 
       function render(rows) {
         let html = "";
+
         rows.forEach((c, i) => {
-          html += `<tr>
+          html += `
+
+<tr>
+
 <td>${c.company_name || ""}</td>
-<td>${c.status || ""}</td>
+
+<td>${c.plan || ""}</td>
+
+<td>${c.issue_type || ""}</td>
+
 <td>${c.payment_status || ""}</td>
-<td>${c.service_status || ""}</td>
-<td>${c.health || ""}</td>
-<td>${c.payment_date || ""}</td>
-<td><button class="btn" onclick="showDetails('${
-            c.customer_id
-          }')">Details</button></td>
-</tr>`;
+
+<td>${c.assigned_to || ""}</td>
+
+<td>${c.last_contact || ""}</td>
+
+<td>
+
+<button
+class="btn"
+onclick="showDetails('${c.lead_id}')"
+>
+Details
+</button>
+
+</td>
+
+</tr>
+
+`;
         });
+
         document.getElementById("tableBody").innerHTML = html;
       }
 
@@ -557,7 +595,7 @@
 
       function showDetails(customerId) {
         current = customers.find(
-          (c) => String(c.customer_id) === String(customerId)
+          (c) => String(c.lead_id) === String(customerId)
         );
 
         if (!current) {
@@ -571,20 +609,20 @@
           current.payment_status || "";
 
         document.getElementById("paymentDate").innerText =
-          current.payment_date || "N/A";
+          current.issue_type || "";
 
         document.getElementById("renewalAmount").innerText =
-          current.renewal_amount || "$0";
+          current.assigned_to || "";
 
         document.getElementById("serviceStatus").innerText =
-          current.service_status || "";
+          current.payment_reference || "";
 
         document.getElementById("daysRemaining").innerText =
           current.days_remaining || "0";
 
         const badge = document.getElementById("customerStatus");
 
-        badge.innerText = current.status || "";
+        badge.innerText = current.payment_status || "";
 
         badge.className = "status-badge";
 
@@ -612,42 +650,69 @@
         document.getElementById("healthResults").innerHTML = `
 
     <div class="health-item">
-        API Endpoint
+        Bank Verification
         <span>⏳ Checking...</span>
     </div>
 
     <div class="health-item">
-        Database
+        Payment Verification
         <span>⏳ Checking...</span>
     </div>
 
     <div class="health-item">
-        Payment Gateway
+        Fraud Check
         <span>⏳ Checking...</span>
     </div>
 
 `;
 
         setTimeout(() => {
-          document.getElementById("healthResults").innerHTML = `
+          const result = Math.random();
+
+          if (result > 0.7) {
+            document.getElementById("healthResults").innerHTML = `
 
         <div class="health-item">
-            API Endpoint
-            <span>🟢 Healthy</span>
+            Bank Verification
+            <span>🟢 Paid</span>
         </div>
 
         <div class="health-item">
-            Database
-            <span>🟢 Healthy</span>
+            Payment Verification
+            <span>🟢 Verified</span>
         </div>
 
         <div class="health-item">
-            Payment Gateway
-            <span>🟢 Healthy</span>
+            Fraud Check
+            <span>🟢 Passed</span>
         </div>
 
-    `;
-        }, 2000);
+        `;
+          } else {
+            document.getElementById("healthResults").innerHTML = `
+
+        <div class="health-item">
+            Bank Verification
+            <span>🟡 Pending</span>
+        </div>
+
+        <div class="health-item">
+            Payment Verification
+            <span>🟡 Awaiting</span>
+        </div>
+
+        <div class="health-item">
+            Fraud Check
+            <span>🟢 Passed</span>
+        </div>
+
+        `;
+          }
+        }, 2500);
+
+        paymentVerified = true;
+
+        document.getElementById("markPaidBtn").disabled = false;
       }
 
       function restartService() {
@@ -660,6 +725,46 @@
 
       function sendPaymentLink() {
         alert("✅ Payment Link Sent Successfully");
+      }
+
+      async function markPaid() {
+        const btn = document.getElementById("markPaidBtn");
+
+        btn.disabled = true;
+
+        btn.innerText = "Processing...";
+
+        if (!paymentVerified) {
+          alert("Please verify payment first.");
+
+          return;
+        }
+
+        const res = await fetch("/mark-paid", {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            lead_id: current.lead_id,
+          }),
+        });
+
+        const result = await res.json();
+
+        if (result.status === "success") {
+          alert("Customer moved to onboarding.");
+
+          // btn.innerText = "Completed";
+
+          closeModal();
+
+          loadData();
+        } else {
+          alert(result.message);
+        }
       }
     </script>
   </body>
