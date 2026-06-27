@@ -788,7 +788,7 @@ def home():
 
 
     return render_template(
-        "index.html",
+        "indexv2.html",
         role=session.get("role")
 
     )
@@ -809,7 +809,7 @@ def dashboard():
     # """
 
     return render_template(
-        "dashboard.html",
+        "dashboard_v3.html",
          role=session.get("role")
 
     )

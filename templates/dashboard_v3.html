@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteData Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      :root {
+        --bg-dark: #080b12;
+        --sidebar-bg: #0b101a;
+        --card-bg: #111723;
+        --text-main: #f3f4f6;
+        --text-muted: #8b92a5;
+        --border-color: #1f2937;
+
+        --primary-blue: #2563eb;
+        --primary-blue-glow: rgba(37, 99, 235, 0.4);
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+        --accent-orange: #f59e0b;
+        --accent-purple: #8b5cf6;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* --- SIDEBAR --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px;
+        height: 100%;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 40px;
+        padding-left: 12px;
+      }
+
+      .logo-icon {
+        color: #3b82f6;
+        font-size: 28px;
+      }
+      .logo span {
+        color: white;
+      }
+
+      .nav-menu {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-grow: 1;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .nav-item:hover {
+        color: var(--text-main);
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .nav-item.active {
+        background-color: rgba(37, 99, 235, 0.15);
+        color: white;
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        box-shadow: inset 0 0 15px var(--primary-blue-glow);
+      }
+
+      .nav-item i {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+      }
+
+      .logout {
+        margin-top: auto;
+        color: var(--text-muted);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      /* --- MAIN CONTENT --- */
+      .main-content {
+        flex: 1;
+        padding: 24px 32px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .header-title h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .header-title p {
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .search-bar {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 300px;
+      }
+
+      .search-bar input {
+        background: transparent;
+        border: none;
+        color: white;
+        outline: none;
+        width: 100%;
+        font-size: 14px;
+      }
+
+      .search-bar i {
+        color: var(--text-muted);
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #1e3a8a;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+      .user-info {
+        display: flex;
+        flex-direction: column;
+      }
+      .user-info .name {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .user-info .role {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      /* KPI Cards */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+      }
+      .kpi-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .kpi-card:nth-child(1) {
+        border-top: 2px solid var(--primary-blue);
+      }
+      .kpi-card:nth-child(2) {
+        border-top: 2px solid var(--accent-green);
+      }
+      .kpi-card:nth-child(3) {
+        border-top: 2px solid var(--accent-orange);
+      }
+      .kpi-card:nth-child(4) {
+        border-top: 2px solid var(--accent-red);
+      }
+      .kpi-card:nth-child(5) {
+        border-top: 2px solid var(--accent-purple);
+      }
+
+      .kpi-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .kpi-icon-box {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      .c-blue {
+        color: var(--primary-blue);
+      }
+      .c-green {
+        color: var(--accent-green);
+      }
+      .c-orange {
+        color: var(--accent-orange);
+      }
+      .c-red {
+        color: var(--accent-red);
+      }
+      .c-purple {
+        color: var(--accent-purple);
+      }
+      .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      /* General Card Styles */
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+      }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .card-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      /* Charts Row */
+      .charts-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+      }
+      .chart-container {
+        position: relative;
+        height: 260px;
+        width: 100%;
+      }
+
+      /* Bottom Grid */
+      .bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .table-stats {
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .stat-row:last-child {
+        border-bottom: none;
+      }
+
+      /* Pills & Tables */
+      .pill {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .pill.active {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
+      .pill.inactive {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+      }
+      .pill.plan {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+      }
+      .pill.plan.enterprise {
+        background-color: rgba(37, 99, 235, 0.1);
+        color: var(--primary-blue);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 13px;
+      }
+      th {
+        color: var(--text-muted);
+        font-weight: 500;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      td {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-muted);
+      }
+      tr:last-child td {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      td.customer-col {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-main);
+        font-weight: 500;
+      }
+      .avatar-initials {
+        width: 32px;
+        height: 32px;
+        background-color: #f3f4f6;
+        color: #111827;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fa-solid fa-chart-simple logo-icon"></i>
+        <span>ByteData</span>
+      </div>
+
+      <ul class="nav-menu">
+        <a href="/dashboard" class="nav-item active"
+          ><i class="fa-solid fa-border-all"></i> Dashboard</a
+        >
+        <a href="/" class="nav-item"
+          ><i class="fa-solid fa-shield-halved"></i> Data Verification</a
+        >
+        {% if role == "admin" %}
+
+        <a href="/customers" class="nav-item"
+          ><i class="fa-solid fa-users"></i> Customers</a
+        >
+        <a href="/communications" class="nav-item"
+          ><i class="fa-solid fa-comments"></i> Communications</a
+        >
+        <a href="/operations" class="nav-item"
+          ><i class="fa-solid fa-gear"></i> Operations Center</a
+        >
+        <a href="/payments" class="nav-item"
+          ><i class="fa-solid fa-credit-card"></i> Payment Center</a
+        >
+        {% endif %}
+      </ul>
+
+      <a href="/logout" class="logout">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+      </a>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <div class="header-title">
+          <h1>Dashboard Overview</h1>
+          <p>Welcome back! Here's what's happening with your data today.</p>
+        </div>
+
+        <div class="header-controls">
+          <div class="search-bar">
+            <input type="text" placeholder="Search customers..." />
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+        </div>
+      </header>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon-box c-blue">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            Total Customers
+          </div>
+          <div class="kpi-value" id="totalCustomers">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon-box c-green">
+              <i class="fa-solid fa-heart-pulse"></i>
+            </div>
+            Active
+          </div>
+          <div class="kpi-value" id="activeCustomers">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon-box c-orange">
+              <i class="fa-regular fa-calendar"></i>
+            </div>
+            Due Today
+          </div>
+          <div class="kpi-value" id="dueToday">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon-box c-red">
+              <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            Overdue
+          </div>
+          <div class="kpi-value" id="overdueCustomers">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <div class="kpi-icon-box c-purple">
+              <i class="fa-solid fa-dollar-sign"></i>
+            </div>
+            Total Revenue
+          </div>
+          <div class="kpi-value" id="totalRevenue">$0</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Revenue Analytics</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Customer Status</div>
+          </div>
+          <div
+            class="chart-container"
+            style="display: flex; justify-content: center; align-items: center"
+          >
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-grid">
+        <div class="card">
+          <div class="card-header" style="margin-bottom: 10px">
+            <div class="card-title">Team Performance</div>
+          </div>
+          <div class="table-stats">
+            <div class="stat-row">
+              <span>Maricar Row Count</span>
+              <strong id="maricarCount" class="c-blue">0</strong>
+            </div>
+            <div class="stat-row">
+              <span>Maureene Row Count</span>
+              <strong id="maureeneCount" class="c-blue">0</strong>
+            </div>
+          </div>
+          <div class="chart-container" style="height: 180px">
+            <canvas id="teamChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Upcoming Renewals</div>
+          </div>
+          <ul
+            id="renewals"
+            style="list-style: none; color: var(--text-muted); font-size: 14px"
+          >
+            <li style="padding: 10px 0; text-align: center">
+              No upcoming renewals found.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px">
+        <div class="card-header">
+          <div class="card-title">Recent Customers</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Country / Region</th>
+              <th>Plan</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="customerTable"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <script>
+      // Set global Chart.js defaults to match Dark Theme
+      Chart.defaults.color = "#8b92a5";
+      Chart.defaults.font.family = "'Inter', sans-serif";
+      Chart.defaults.borderColor = "rgba(255, 255, 255, 0.05)";
+
+      async function loadDashboard() {
+        try {
+          const res = await fetch("/dashboard-data");
+          const data = await res.json();
+
+          // 1. Populate KPIs
+          document.getElementById("totalCustomers").innerText =
+            data.total_customers || 0;
+          document.getElementById("activeCustomers").innerText =
+            data.active_customers || 0;
+          document.getElementById("dueToday").innerText = data.due_today || 0;
+          document.getElementById("overdueCustomers").innerText =
+            data.overdue_customers || 0;
+          document.getElementById("totalRevenue").innerText =
+            "$" + (data.total_revenue || 0).toLocaleString();
+
+          // 2. Populate Customers Table
+          let rows = "";
+          (data.customers || []).forEach((c) => {
+            // Extract initials for the avatar
+            const compName = c.company_name || "NA";
+            const initials = compName.substring(0, 2).toUpperCase();
+
+            // Style pills dynamically based on data
+            const planText = c.subscription_plan || "";
+            const planClass = planText.toLowerCase().includes("enterprise")
+              ? "pill plan enterprise"
+              : "pill plan";
+
+            const statusText = c.status || "";
+            const statusClass =
+              statusText.toLowerCase() === "active"
+                ? "pill active"
+                : "pill inactive";
+
+            rows += `
+                    <tr>
+                        <td class="customer-col">
+                            <div class="avatar-initials">${initials}</div>
+                            ${compName}
+                        </td>
+                        <td>${c.country || "N/A"}</td>
+                        <td><span class="${planClass}">${planText}</span></td>
+                        <td>$${(
+                          c.subscription_amount || 0
+                        ).toLocaleString()}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                    </tr>`;
+          });
+          document.getElementById("customerTable").innerHTML = rows;
+
+          // 3. Revenue Line Chart
+          new Chart(document.getElementById("revenueChart"), {
+            type: "line",
+            data: {
+              labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+              datasets: [
+                {
+                  label: "Revenue",
+                  data: [10, 20, 15, 30, 40, 35],
+                  borderColor: "#3b82f6",
+                  backgroundColor: "rgba(59, 130, 246, 0.1)",
+                  borderWidth: 2,
+                  tension: 0.4,
+                  fill: true,
+                  pointBackgroundColor: "#fff",
+                  pointBorderColor: "#3b82f6",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true },
+              },
+            },
+          });
+        } catch (e) {
+          console.log("Error loading dashboard data:", e);
+        }
+      }
+
+      async function loadAnalytics() {
+        try {
+          const res = await fetch("/dashboard-analytics");
+          const data = await res.json();
+
+          // Status Doughnut Chart
+          new Chart(document.getElementById("statusChart"), {
+            type: "doughnut",
+            data: {
+              labels: Object.keys(data.status || {}),
+              datasets: [
+                {
+                  data: Object.values(data.status || {}),
+                  backgroundColor: ["#2563eb", "#ef4444", "#f59e0b", "#10b981"],
+                  borderWidth: 0,
+                  cutout: "75%",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "right",
+                  labels: { usePointStyle: true, boxWidth: 8 },
+                },
+              },
+            },
+          });
+
+          // Team Bar Chart
+          new Chart(document.getElementById("teamChart"), {
+            type: "bar",
+            data: {
+              labels: Object.keys(data.assigned || {}),
+              datasets: [
+                {
+                  label: "Accounts Processed",
+                  data: Object.values(data.assigned || {}),
+                  backgroundColor: "#3b82f6",
+                  borderRadius: 4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } },
+              },
+            },
+          });
+        } catch (e) {
+          console.log("Error loading analytics data:", e);
+        }
+      }
+
+      async function loadVerificationStats() {
+        try {
+          const res = await fetch("/verification-stats");
+          const data = await res.json();
+
+          document.getElementById("maricarCount").innerText = data.maricar || 0;
+          document.getElementById("maureeneCount").innerText =
+            data.maureene || 0;
+        } catch (e) {
+          console.log("Error loading verification stats:", e);
+        }
+      }
+
+      // Initialize fetching on load
+      loadDashboard();
+      loadAnalytics();
+      loadVerificationStats();
+    </script>
+  </body>
+</html>

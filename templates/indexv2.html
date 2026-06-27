@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteData - Dataset Review</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+      :root {
+        --bg-dark: #0b0f19;
+        --panel-bg: #111827;
+        --border-color: #1f2937;
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --accent-blue: #3b82f6;
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+        --input-bg: #0f172a;
+        --bg-dark: #080b12;
+        --sidebar-bg: #0b101a;
+        --card-bg: #111723;
+        --text-main: #f3f4f6;
+        --text-muted: #8b92a5;
+        --border-color: #1f2937;
+
+        --primary-blue: #2563eb;
+        --primary-blue-glow: rgba(37, 99, 235, 0.4);
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+        --accent-orange: #f59e0b;
+        --accent-purple: #8b5cf6;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 240px 1fr 450px;
+        gap: 20px;
+        padding: 20px;
+        overflow: hidden;
+      }
+
+      /* --- Global Component Styles --- */
+      .btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: transparent;
+        color: var(--text-main);
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .btn:hover {
+        background-color: var(--border-color);
+      }
+
+      .btn-primary {
+        background-color: var(--accent-blue);
+        color: white;
+        border: none;
+      }
+      .btn-primary:hover {
+        background-color: #2563eb;
+      }
+
+      /* --- Left Sidebar --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px;
+        height: 100%;
+      }
+      .logo {
+        font-size: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        margin-bottom: 20px;
+        padding-left: 15px;
+      }
+      .logo-icon {
+        color: var(--accent-blue);
+      }
+      .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        list-style: none;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+      .nav-item:hover {
+        color: var(--text-main);
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      .nav-item.active {
+        background-color: rgba(37, 99, 235, 0.15);
+        color: white;
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        box-shadow: inset 0 0 15px var(--primary-blue-glow);
+      }
+      .logout {
+        margin-top: auto;
+        padding: 12px 16px;
+        color: var(--text-muted);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logout:hover {
+        color: var(--accent-red);
+      }
+
+      /* --- Main Content (Center) --- */
+      .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        overflow: hidden; /* Changed to hidden to allow internal scrolling */
+        padding-right: 10px;
+        padding: 24px 32px;
+      }
+
+      .content-body {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      /* Footer Footer Actions */
+      .footer-actions {
+        background: var(--panel-bg);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .header-top h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+      .header-top p {
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+
+      .badge-green {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        font-weight: 600;
+      }
+
+      .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px 20px;
+        align-items: center;
+      }
+
+      .form-label {
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .form-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 14px;
+        outline: none;
+        font-family: inherit;
+      }
+
+      .form-input:focus {
+        color: var(--text-main);
+      }
+      .form-input.error {
+        color: var(--accent-red);
+        font-weight: bold;
+      }
+
+      /* Alert Boxes */
+      .alert-box {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        display: none;
+      }
+      .alert-box.error {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .alert-box.success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      /* --- Right Panels --- */
+      .right-panels {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: 100%;
+      }
+
+      .code-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .code-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .code-content {
+        padding: 15px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        color: var(--accent-green);
+        overflow-y: auto;
+        flex: 1;
+        white-space: pre-wrap;
+      }
+
+      /* --- SQL Modal --- */
+      .sql-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+      }
+
+      .sql-window {
+        width: 95%;
+        max-width: 1200px;
+        height: 85vh;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+      }
+
+      .sql-top-bar {
+        height: 42px;
+        background: var(--input-bg);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 15px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .sql-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .sql-editor-container {
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .sql-editor {
+        width: 100%;
+        height: 120px;
+        resize: none;
+        background: var(--input-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        font-family: Consolas, monospace;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .sql-toolbar {
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--input-bg);
+      }
+
+      .result-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .result-table th {
+        position: sticky;
+        top: 0;
+        background: var(--accent-blue);
+        color: white;
+        text-align: left;
+      }
+      .result-table th,
+      .result-table td {
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        white-space: nowrap;
+      }
+      .result-table tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .action-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+      }
+
+      .action-card {
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .action-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-blue);
+      }
+
+      .action-card.success {
+        background-color: rgba(16, 185, 129, 0.05);
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+      .action-card.success:hover {
+        border-color: var(--accent-green);
+      }
+      .stats-card {
+        margin-top: auto;
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .stats-card h4 {
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .stats-card h2 {
+        font-size: 28px;
+        color: var(--accent-blue);
+        margin: 10px 0;
+      }
+
+      /* Sidebar footer container that pushes to bottom */
+      .sidebar-footer {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Glossy red error box style */
+      .form-row.error-box-row {
+        background-color: rgba(
+          239,
+          68,
+          68,
+          0.15
+        ) !important; /* Transparent glossy red background */
+        border: 1px solid rgba(239, 68, 68, 0.8) !important; /* Strong red border */
+        box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); /* Soft inner glow */
+      }
+
+      /* --- FOOTER BUTTON CARD STYLE --- */
+      .footer-card-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+        color: var(--text-main);
+        text-align: left;
+      }
+      .footer-card-btn:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-2px);
+      }
+      .footer-card-text h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .footer-card-text p {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .footer-icon {
+        font-size: 18px;
+        color: var(--accent-blue);
+      }
+
+      /* Styling for the Record Meta area */
+      .record-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+      .record-id {
+        color: var(--accent-blue);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .id-icon {
+        border: 1px solid var(--accent-blue);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        opacity: 0.8;
+      }
+      .separator {
+        color: #374151;
+      }
+      /* --- LOADER STYLES --- */
+      .loader-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 10000;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .json-key {
+        color: #818cf8;
+      } /* Light Blue/Purple for Keys */
+      .json-string {
+        color: #10b981;
+      } /* Green for Strings */
+      .json-number {
+        color: #f59e0b;
+      } /* Orange/Gold for Numbers */
+    </style>
+  </head>
+  <body>
+    <div id="loaderOverlay" class="loader-overlay">
+      <div class="spinner"></div>
+      <h2 id="loaderMessage" style="color: white">Processing...</h2>
+    </div>
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fa-solid fa-chart-simple logo-icon"></i>
+        <span>ByteData</span>
+      </div>
+
+      <ul class="nav-menu">
+        <a href="/dashboard" class="nav-item"
+          ><i class="fa-solid fa-border-all"></i> Dashboard</a
+        >
+        <a href="/" class="nav-item active"
+          ><i class="fa-solid fa-shield-halved"></i> Data Verification</a
+        >
+        {% if role == "admin" %}
+        <a href="/customers" class="nav-item"
+          ><i class="fa-solid fa-users"></i> Customers</a
+        >
+        <a href="/communications" class="nav-item"
+          ><i class="fa-solid fa-comments"></i> Communications</a
+        >
+        <a href="/operations" class="nav-item"
+          ><i class="fa-solid fa-gear"></i> Operations Center</a
+        >
+        <a href="/payments" class="nav-item"
+          ><i class="fa-solid fa-credit-card"></i> Payment Center</a
+        >
+        {% endif %}
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="stats-card">
+          <h4>Verified Rows</h4>
+          <h2 id="verifiedCount">0</h2>
+          <p style="color: var(--accent-green); font-size: 12px">
+            ↑ Session Active
+          </p>
+        </div>
+        <a href="/logout" class="logout">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="content-body">
+        <div class="header-top">
+          <div>
+            <h1>Dataset Review</h1>
+            <p>Review, verify and manage your dataset records</p>
+          </div>
+          <div class="badge-green">● Ready For Verification</div>
+        </div>
+
+        <div id="errorBox" class="alert-box error"></div>
+        <div id="successBox" class="alert-box success"></div>
+
+        <div class="form-container" id="reviewContainer">
+          <p style="color: var(--text-muted); padding: 20px">
+            Click "Fetch Dataset" to load the first row...
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <!-- <div
+          id="recordIdDisplay"
+          style="color: var(--text-muted); font-weight: 600"
+        >
+          No record loaded
+        </div> -->
+        <div class="record-meta">
+          <div class="record-id">
+            <span class="id-icon">🗄️</span>
+            <span id="recordIdDisplay">Record ID: --</span>
+          </div>
+          <span class="separator">|</span>
+          <div id="createdDateDisplay">Created: --</div>
+        </div>
+
+        <div style="display: flex; gap: 15px">
+          <button class="footer-card-btn" onclick="fetchNextRow()">
+            <div class="footer-icon">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="footer-card-text">
+              <h4>Fetch Dataset</h4>
+              <p>Load next record</p>
+            </div>
+          </button>
+
+          <button
+            class="footer-card-btn"
+            onclick="saveToGoogleSheet()"
+            style="border-color: var(--accent-green)"
+          >
+            <div class="footer-icon" style="color: var(--accent-green)">
+              <i class="fa-solid fa-check-square"></i>
+            </div>
+            <div class="footer-card-text">
+              <h4 style="color: var(--accent-green)">Save & Verify</h4>
+              <p>Save and mark as verified</p>
+            </div>
+          </button>
+
+          <button class="footer-card-btn" onclick="openSQLModal()">
+            <div class="footer-icon" style="color: #a855f7">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div class="footer-card-text">
+              <h4 style="color: #a855f7">SQL Database</h4>
+              <p>View and manage database</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="right-panels">
+      <div class="code-panel">
+        <div class="code-header">
+          <span>{ } JSON Preview</span>
+          <span style="cursor: pointer">📋</span>
+        </div>
+        <div class="code-content" id="jsonPreview">No Data Loaded</div>
+      </div>
+    </aside>
+
+    <div id="sqlModal" class="sql-modal">
+      <div class="sql-window">
+        <div class="sql-top-bar">
+          <div>🗄 ByteData SQL Studio</div>
+          <div style="color: var(--accent-green)">● Connected : DB</div>
+        </div>
+
+        <div class="sql-header">
+          <div style="font-size: 20px; font-weight: 600">SQL Query Studio</div>
+          <button
+            onclick="closeSQLModal()"
+            style="
+              width: 32px;
+              height: 32px;
+              border: none;
+              background: var(--accent-red);
+              color: white;
+              cursor: pointer;
+              border-radius: 8px;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="sql-editor-container">
+          <textarea id="sqlQuery" class="sql-editor">
+SELECT * FROM data LIMIT 20;</textarea
+          >
+        </div>
+
+        <div class="sql-toolbar">
+          <button
+            onclick="runSQLQuery()"
+            class="btn btn-primary"
+            style="height: 34px"
+          >
+            ▶ Run Query
+          </button>
+          <div
+            style="margin-left: 20px; color: var(--text-muted); font-size: 13px"
+          >
+            Rows:
+            <b id="sqlRows" style="color: var(--text-main)">0</b> &nbsp;|&nbsp;
+            Time:
+            <b id="sqlTime" style="color: var(--text-main)">0.00s</b>
+            &nbsp;|&nbsp; Source: <b style="color: var(--text-main)">DATA DB</b>
+          </div>
+        </div>
+
+        <div
+          style="
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background: var(--input-bg);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 14px;
+          "
+        >
+          <div>Results</div>
+          <div id="sqlResultCount" style="color: var(--text-muted)">
+            0 Rows Returned
+          </div>
+        </div>
+
+        <div
+          id="queryResults"
+          style="flex: 1; overflow: auto; background: var(--panel-bg)"
+        >
+          <p style="padding: 20px; color: var(--text-muted)">
+            Execute a query to view results.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentRow = {};
+      let verifiedCount = 0;
+
+      const reviewContainer = document.getElementById("reviewContainer");
+      const jsonPreview = document.getElementById("jsonPreview");
+      const verifiedCounter = document.getElementById("verifiedCount");
+      const errorBox = document.getElementById("errorBox");
+      const successBox = document.getElementById("successBox");
+
+      function showLoader(message) {
+        document.getElementById("loaderMessage").innerText = message;
+        document.getElementById("loaderOverlay").style.display = "flex";
+      }
+
+      function hideLoader() {
+        document.getElementById("loaderOverlay").style.display = "none";
+      }
+
+      async function fetchNextRow() {
+        showLoader("Fetching Dataset..."); // Show loader
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+
+        try {
+          const res = await fetch("/fetch-next-row");
+          const result = await res.json();
+          if (result.status === "finished") {
+            reviewContainer.innerHTML =
+              '<p style="color: var(--text-muted); padding: 20px;">No More Assigned Rows</p>';
+            jsonPreview.textContent = "No More Assigned Rows";
+            alert("No More Assigned Rows");
+            return;
+          }
+          if (result.status === "error") {
+            alert(result.message);
+            return;
+          }
+          currentRow = result.row;
+          renderReviewForm(currentRow);
+          updateJSON();
+        } catch (err) {
+          console.error("Fetch error", err);
+          currentRow = { assign: "Maureene", brand: "Shell", id: 2999 };
+          renderReviewForm(currentRow);
+          updateJSON();
+        } finally {
+          hideLoader(); // Hide loader when done
+        }
+      }
+
+      function renderReviewForm(row) {
+        reviewContainer.innerHTML = "";
+        // // Update Footer ID Display
+        // const id = row.id || row.Id || "N/A";
+        // const created = row.created_at || new Date().toLocaleString(); // Or whatever field holds the timestamp
+
+        // document.getElementById(
+        //   "recordIdDisplay"
+        // ).innerText = `Record ID: ${id}`;
+        // document.getElementById(
+        //   "createdDateDisplay"
+        // ).innerText = `Created: ${created}`;
+        // 1. Determine Date (use existing or current)
+        const rawDate = row.created_at || new Date();
+        const d = new Date(rawDate);
+
+        // 2. Format Date: Jan 17, 2026 10:00 AM
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        const formattedDate = `${
+          months[d.getMonth()]
+        } ${d.getDate()}, ${d.getFullYear()} ${d.getHours() % 12 || 12}:${d
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")} ${d.getHours() >= 12 ? "PM" : "AM"}`;
+
+        // 3. Update DOM
+        const id = row.id || row.Id || "N/A";
+        document.getElementById(
+          "recordIdDisplay"
+        ).innerText = `Record ID: ${id}`;
+        document.getElementById(
+          "createdDateDisplay"
+        ).innerText = `Created: ${formattedDate}`;
+        Object.keys(row).forEach((key) => {
+          let displayLabel = key
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase());
+          reviewContainer.innerHTML += `
+            <div class="form-row">
+                <div class="form-label">${displayLabel}</div>
+                <div>
+                    <input type="text" class="form-input" id="field_${key}" value="${row[key]}" onchange="updateField('${key}', this.value)">
+                </div>
+            </div>`;
+        });
+      }
+
+      function updateField(key, value) {
+        currentRow[key] = value;
+        updateJSON();
+      }
+      //   function updateJSON() {
+      //     jsonPreview.textContent = JSON.stringify(currentRow, null, 2);
+      //   }
+      function updateJSON() {
+        const jsonPreview = document.getElementById("jsonPreview");
+
+        // 1. Stringify the JSON
+        let json = JSON.stringify(currentRow, null, 4);
+
+        // 2. Escape HTML characters so it doesn't break the layout
+        json = json
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        // 3. Regex to find keys, strings, and numbers and wrap them in <span>
+        json = json.replace(
+          /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          function (match) {
+            let cls = "json-number";
+            if (/^"/.test(match)) {
+              if (/:$/.test(match)) {
+                cls = "json-key"; // It's a key
+              } else {
+                cls = "json-string"; // It's a string value
+              }
+            }
+            return '<span class="' + cls + '">' + match + "</span>";
+          }
+        );
+
+        // 4. Inject as HTML
+        jsonPreview.innerHTML = json;
+      }
+
+      //   function validateData() {
+      //     let errors = [];
+      //     document
+      //       .querySelectorAll(".form-row")
+      //       .forEach((row) => row.classList.remove("error-box-row"));
+      //     document
+      //       .querySelectorAll("input")
+      //       .forEach((input) => input.classList.remove("error"));
+      //     Object.keys(currentRow).forEach((key) => {
+      //       const value = String(currentRow[key]).trim();
+      //       const input = document.getElementById(`field_${key}`);
+      //       if (!input) return;
+      //       if (value === "") {
+      //         errors.push(`${key} is empty`);
+      //         input.classList.add("error");
+      //       }
+      //       if (value.includes("#ERROR")) {
+      //         errors.push(`${key} contains #ERROR`);
+      //         input.classList.add("error");
+      //       }
+      //       if (value.toLowerCase() === "unknown") {
+      //         errors.push(`${key} contains unknown value`);
+      //         input.classList.add("error");
+      //       }
+      //     });
+      //     return errors;
+      //   }
+
+      function validateData() {
+        let errors = [];
+
+        // Reset: Remove error styles from all inputs and rows first
+        document
+          .querySelectorAll(".form-row")
+          .forEach((row) => row.classList.remove("error-box-row"));
+        document
+          .querySelectorAll("input")
+          .forEach((input) => input.classList.remove("error"));
+
+        Object.keys(currentRow).forEach((key) => {
+          const value = String(currentRow[key]).trim();
+          const input = document.getElementById(`field_${key}`);
+
+          if (!input) return;
+
+          let hasError = false;
+
+          // Check conditions
+          if (value === "") {
+            errors.push(`${key} is empty`);
+            hasError = true;
+          } else if (value.includes("#ERROR")) {
+            errors.push(`${key} contains #ERROR`);
+            hasError = true;
+          } else if (value.toLowerCase() === "unknown") {
+            errors.push(`${key} contains unknown value`);
+            hasError = true;
+          }
+
+          // If an error exists, apply styles to both the input and the whole row
+          if (hasError) {
+            input.classList.add("error");
+            const parentRow = input.closest(".form-row");
+            if (parentRow) {
+              parentRow.classList.add("error-box-row");
+            }
+          }
+        });
+
+        return errors;
+      }
+
+      async function saveToGoogleSheet() {
+        const validationErrors = validateData();
+        if (validationErrors.length > 0) {
+          alert("Please resolve validation errors.");
+          errorBox.style.display = "block";
+          errorBox.innerHTML = `<b>Validation Errors:</b><br>${validationErrors.join(
+            "<br>"
+          )}`;
+          return;
+        }
+        showLoader("Saving Data..."); // Show loader
+        try {
+          const res = await fetch("/update-sheet-row", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(currentRow),
+          });
+          const result = await res.json();
+          if (result.status === "success") {
+            verifiedCount++;
+            verifiedCounter.innerText = verifiedCount;
+            successBox.style.display = "block";
+            successBox.innerHTML = "✅ Data Verified and Saved";
+            setTimeout(fetchNextRow, 700);
+          }
+        } catch (err) {
+          alert("Error saving.");
+        } finally {
+          hideLoader(); // Hide loader when done
+        }
+      }
+
+      function openSQLModal() {
+        document.getElementById("sqlModal").style.display = "flex";
+      }
+      function closeSQLModal() {
+        document.getElementById("sqlModal").style.display = "none";
+      }
+
+      async function runSQLQuery() {
+        const query = document.getElementById("sqlQuery").value;
+        try {
+          const res = await fetch("/run-query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query }),
+          });
+          const result = await res.json();
+          if (result.status !== "success") {
+            alert(result.message);
+            return;
+          }
+          renderQueryTable(result.rows);
+        } catch (err) {
+          alert("Query error.");
+        }
+      }
+
+      function renderQueryTable(rows) {
+        if (rows.length === 0) {
+          document.getElementById("queryResults").innerHTML =
+            "<p>No Results</p>";
+          return;
+        }
+        document.getElementById(
+          "sqlResultCount"
+        ).innerText = `${rows.length} Rows`;
+        let headers = Object.keys(rows[0]);
+        let html = `<table class="result-table"><thead><tr>`;
+        headers.forEach((h) => (html += `<th>${h}</th>`));
+        html += "</tr></thead><tbody>";
+        rows.forEach((r) => {
+          html += "<tr>";
+          headers.forEach((h) => (html += `<td>${r[h]}</td>`));
+          html += "</tr>";
+        });
+        html += "</tbody></table>";
+        document.getElementById("queryResults").innerHTML = html;
+      }
+    </script>
+  </body>
+</html>
