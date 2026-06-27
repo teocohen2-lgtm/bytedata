@@ -45,13 +45,24 @@
       }
 
       body {
-        background-color: var(--bg-dark);
+        /* background-color: var(--bg-dark); */
+        background: radial-gradient(
+            circle at top left,
+            rgba(37, 99, 235, 0.25),
+            transparent 30%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(16, 185, 129, 0.15),
+            transparent 25%
+          ),
+          #080b12;
         color: var(--text-main);
         height: 100vh;
         display: grid;
         grid-template-columns: 240px 1fr 450px;
         gap: 20px;
-        padding: 20px;
+        /* padding: 20px; */
         overflow: hidden;
       }
 
@@ -86,25 +97,35 @@
       /* --- Left Sidebar --- */
       .sidebar {
         width: 260px;
-        background-color: var(--sidebar-bg);
-        border-right: 1px solid var(--border-color);
+        /* background-color: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color); */
+        background: linear-gradient(180deg, #0b1220, #08111f);
+
+        border-right: 1px solid rgba(59, 130, 246, 0.15);
+
+        box-shadow: inset 0 0 80px rgba(59, 130, 246, 0.05);
         display: flex;
         flex-direction: column;
         padding: 24px 16px;
         height: 100%;
       }
+
       .logo {
-        font-size: 20px;
-        font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 10px;
-        color: white;
-        margin-bottom: 20px;
-        padding-left: 15px;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 40px;
+        padding-left: 12px;
       }
+
       .logo-icon {
-        color: var(--accent-blue);
+        color: #3b82f6;
+        font-size: 28px;
+      }
+      .logo span {
+        color: white;
       }
       .nav-menu {
         display: flex;
@@ -276,6 +297,7 @@
         border: 1px solid var(--border-color);
         border-radius: 12px;
         overflow: hidden;
+        box-shadow: 0 0 25px rgba(37, 99, 235, 0.08);
       }
 
       .code-header {
@@ -583,10 +605,10 @@
         <a href="/communications" class="nav-item"
           ><i class="fa-solid fa-comments"></i> Communications</a
         >
-        <a href="/operations" class="nav-item"
+        <!-- <a href="/operations" class="nav-item"
           ><i class="fa-solid fa-gear"></i> Operations Center</a
-        >
-        <a href="/payments" class="nav-item"
+        > -->
+        <a href="/operations" class="nav-item"
           ><i class="fa-solid fa-credit-card"></i> Payment Center</a
         >
         {% endif %}

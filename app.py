@@ -828,7 +828,7 @@ def operations():
 
     
     return render_template(
-        "operations.html",
+        "operationsv2.html",
         role=session.get("role")
     )
 
@@ -1333,7 +1333,7 @@ def communications():
     if session.get("role") != "admin":
         return redirect("/dashboard")
     
-    return render_template("communications.html" , role=session.get("role")
+    return render_template("communicationsv2.html" , role=session.get("role")
 )
 
 
@@ -1400,7 +1400,7 @@ def customers():
 
 
     return render_template(
-        "customers.html",
+        "customersv2.html",
         role=session.get("role")
     )
 
