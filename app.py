@@ -697,7 +697,7 @@ def login_required(f):
 def login_page():
 
     return render_template(
-        "login.html"
+        "login_v2.html"
     )
 
 # =====================================
@@ -755,6 +755,7 @@ def login_user():
             return jsonify({
 
                 "status":"success",
+                "message":"Login Successful",
                 "redirect": "/dashboard"
 
             })
