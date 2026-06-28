@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Communications Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #060b14; /* Deep dark background */
+        color: #ffffff;
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Custom Scrollbar for internal panels */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #222b40;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #374151;
+      }
+
+      .panel-bg {
+        background-color: #111726;
+      }
+      .inner-bg {
+        background-color: #1a2235;
+      }
+      .border-color {
+        border-color: #222b40;
+      }
+      .text-muted {
+        color: #8b949e;
+      }
+      .logo {
+     
+        font-size: 24px;
+        font-weight: 700;
+       
+      }
+
+      .logo-icon {
+        color: #3b82f6;
+        font-size: 28px;
+      }
+      .logo span {
+        color: white;
+      }
+
+    </style>
+  </head>
+  <body class="flex text-sm">
+    <!-- Left Sidebar -->
+    <aside class="w-64 border-r border-color flex flex-col h-full shrink-0">
+      <!-- Logo -->
+      <div class="px-6 py-6 flex items-center gap-3">
+        <div
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-xl font-bold"
+        >
+        <i class="fa-solid fa-chart-simple logo-icon"></i>
+        </div>
+        <span class="text-xl font-semibold tracking-wide logo">ByteData</span>
+      </div>
+      <div 
+        class="px-6 text-xs font-semibold text-muted mb-4 uppercase tracking-wider"
+      >
+        Operations Platform
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+        <a
+          href="/dashboard"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-th-large w-5"></i> Dashboard
+        </a>
+        <a
+          href="/"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-clipboard-check w-5"></i> Data Verification
+        </a>
+        <a
+          href="/customers"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-users w-5"></i> Customers
+        </a>
+        <a
+          href="/communications"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-900/20 border border-blue-600/30 text-white transition-colors"
+        >
+          <i class="fas fa-comment-dots text-blue-500 w-5"></i> Communications
+        </a>
+        <!-- <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-cog w-5"></i> Operations Center
+        </a> -->
+        <a
+          href="/operations"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-credit-card w-5"></i> Payment Center
+        </a>
+        <!-- <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-chart-bar w-5"></i> Reports
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <i class="fas fa-sliders-h w-5"></i> Settings
+        </a> -->
+      </nav>
+
+      <!-- Bottom Widgets -->
+      <div class="px-4 pb-6 mt-4">
+        <!-- Activity Chart -->
+        <div class="inner-bg rounded-xl p-4 mb-4 border border-color">
+          <div class="text-xs text-muted mb-1">Today's Activity</div>
+          <div id="todayMessages" class="text-2xl font-bold mb-2">0</div>
+          <div class="text-xs text-muted mb-2">Messages</div>
+          <div class="flex items-center justify-between">
+            <span class="text-green-500 text-xs font-medium"
+              ><i id="todayMessagesChange" class="fas fa-arrow-up mr-1"></i></span
+            >
+            <svg class="w-16 h-6" viewBox="0 0 100 30">
+              <path
+                d="M0,25 L15,20 L30,28 L45,15 L60,22 L75,10 L90,18 L100,5"
+                stroke="#1A56DB"
+                fill="none"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <div class="text-[10px] text-muted mt-1">vs yesterday</div>
+        </div>
+
+        <!-- Profile Profile -->
+        <div
+          class="flex items-center justify-between p-3 inner-bg rounded-xl border border-color cursor-pointer mb-4"
+        >
+          <div class="flex items-center gap-3">
+            <div id="loggedUserAvatar"
+              class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-medium"
+            >
+            M
+            </div>
+            <div>
+              <div class="text-sm font-medium"     id="loggedUserName"
+              >   Admin
+            </div>
+              <div class="text-xs text-muted"     id="loggedUserRole"
+              >   Admin
+              </div>
+            </div>
+          </div>
+          <i class="fas fa-chevron-down text-muted text-xs"></i>
+        </div>
+
+        <a
+          href="/logout"
+          class="flex items-center gap-3 px-3 py-2 text-muted hover:text-white transition-colors"
+        >
+          <i class="fas fa-sign-out-alt text-red-500 w-5"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 p-6 h-full">
+      <!-- Top Header & Stats -->
+      <header class="flex justify-between items-start mb-6 shrink-0">
+        <div>
+          <h1 class="text-2xl font-bold mb-1">Communications Center</h1>
+          <p class="text-muted">
+            Manage all customer conversations and team communications
+          </p>
+        </div>
+
+        <div class="flex gap-4">
+          <div
+            class="panel-bg border border-color rounded-xl p-4 flex items-center gap-4 w-48"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-500"
+            >
+              <i class="fas fa-comment-dots"></i>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Total Conversations</div>
+              <div id="kpiConversations" class="text-xl font-bold flex items-end gap-2">
+                0
+                <span id="kpiConversationChange" class="text-green-500 text-xs font-medium mb-0.5"
+                  ><i class="fas fa-arrow-up"></i>0%</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="panel-bg border border-color rounded-xl p-4 flex items-center gap-4 w-48"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-500"
+            >
+              <i class="fas fa-paper-plane"></i>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Messages Sent</div>
+              <div class="text-xl font-bold flex items-end gap-2" id="kpiMessages">
+                0
+                <span id="kpiMessagesChange" class="text-green-500 text-xs font-medium mb-0.5"
+                  ><i class="fas fa-arrow-up"></i>0%</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="panel-bg border border-color rounded-xl p-4 flex items-center gap-4 w-48"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center text-red-500"
+            >
+              <i class="fas fa-reply"></i>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Awaiting Response</div>
+              <div class="text-xl font-bold flex items-end gap-2" id="kpiAwaiting">
+                0
+                <span id="kpiAwaitingChange" class="text-red-500 text-xs font-medium mb-0.5"
+                  ><i class="fas fa-arrow-down"></i>0%</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="panel-bg border border-color rounded-xl p-4 flex items-center gap-4 w-48"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-green-900/30 flex items-center justify-center text-green-500"
+            >
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Resolved</div>
+              <div class="text-xl font-bold flex items-end gap-2" id="kpiResolved">
+                0
+                <span id="kpiResolvedChange" class="text-green-500 text-xs font-medium mb-0.5"
+                  ><i class="fas fa-arrow-up"></i>10%</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- 3-Column Layout -->
+      <div class="flex-1 flex gap-5 min-h-0">
+        <!-- Column 1: Conversation List -->
+        <div
+          class="w-[340px] panel-bg rounded-xl border border-color flex flex-col overflow-hidden shrink-0"
+        >
+          <!-- Tabs -->
+          <div class="flex border-b border-color px-2 pt-2">
+            <button
+              class="px-4 py-3 text-white border-b-2 border-blue-500 font-medium"
+            >
+              All
+            </button>
+            <button class="px-4 py-3 text-muted hover:text-white font-medium">
+              Unread
+            </button>
+            <button class="px-4 py-3 text-muted hover:text-white font-medium">
+              Starred
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div class="p-4 flex gap-2">
+            <div class="relative flex-1">
+              <i
+                class="fas fa-search absolute left-3 top-2.5 text-muted text-xs"
+              ></i>
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                id="searchCustomer"
+                class="w-full bg-[#1A2235] text-sm text-white rounded-lg pl-9 pr-4 py-2 border border-transparent focus:border-blue-500 focus:outline-none placeholder-gray-500"
+              />
+            </div>
+            <button
+              class="w-10 h-10 inner-bg rounded-lg border border-color flex items-center justify-center text-muted hover:text-white"
+            >
+              <i class="fas fa-filter"></i>
+            </button>
+          </div>
+
+          <!-- List -->
+          <div
+            id="conversationList"
+            class="flex-1 overflow-y-auto px-2 pb-2 space-y-1"
+          ></div>
+
+          <!-- Pagination -->
+          <div class="p-4 border-t border-color flex flex-col gap-3">
+            <div class="text-xs text-muted text-center">
+              Showing 1 to 7 of 128 conversations
+            </div>
+            <div class="flex justify-center gap-1">
+              <button
+                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
+              >
+                <i class="fas fa-chevron-left text-xs"></i>
+              </button>
+              <button
+                class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center"
+              >
+                1
+              </button>
+              <button
+                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
+              >
+                2
+              </button>
+              <button
+                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
+              >
+                3
+              </button>
+              <button
+                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
+              >
+                ...
+              </button>
+              <button
+                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
+              >
+                16
+              </button>
+              <button
+                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
+              >
+                <i class="fas fa-chevron-right text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Main Chat -->
+        <div
+          class="flex-1 panel-bg rounded-xl border border-color flex flex-col overflow-hidden"
+        >
+          <!-- Chat Header -->
+          <div
+            class="px-6 py-4 border-b border-color flex justify-between items-center bg-[#111726]"
+          >
+            <div class="flex items-center gap-4">
+              <div
+                 id="chatAvatar"
+               class="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center text-xl font-bold"
+              >
+                G
+              </div>
+              <div>
+                <h2 id="chatCompanyName" class="text-lg font-bold">Please Select customer</h2>
+                <p id="chatCompanyInfo" class="text-xs text-muted">
+                  No customer selected
+
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button
+                class="w-9 h-9 rounded-full inner-bg flex items-center justify-center text-muted hover:text-white border border-color"
+              >
+                <i class="far fa-star"></i>
+              </button>
+              <button
+                class="w-9 h-9 rounded-full inner-bg flex items-center justify-center text-muted hover:text-white border border-color"
+              >
+                <i class="fas fa-info"></i>
+              </button>
+              <button
+                class="w-9 h-9 rounded-full inner-bg flex items-center justify-center text-muted hover:text-white border border-color"
+              >
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Body -->
+          <div id="chatMessages" class="flex-1 p-6 overflow-y-auto space-y-6">
+            <!-- Left Message (ByteData) -->
+            <div
+            class="text-center text-gray-500 py-20">
+    
+            Select a customer to view conversation
+    
+            </div>
+          </div>
+
+          <!-- Chat Input Area -->
+          <div class="p-4 border-t border-color bg-[#0D121E]">
+            <div
+              class="border border-color rounded-xl bg-[#111726] overflow-hidden flex flex-col"
+            >
+              <!-- Input Tabs -->
+              <div class="flex px-4 pt-2 border-b border-color">
+                <button
+                  class="px-4 py-2 text-blue-500 border-b-2 border-blue-500 font-medium text-sm"
+                >
+                  Reply
+                </button>
+                <button
+                  class="px-4 py-2 text-muted hover:text-gray-300 font-medium text-sm transition-colors"
+                >
+                  Internal Note
+                </button>
+              </div>
+
+              <textarea
+              id="messageInput"
+                placeholder="Type your message..."
+                class="w-full bg-transparent text-sm text-white p-4 h-24 resize-none focus:outline-none placeholder-gray-500"
+              ></textarea>
+
+              <!-- Toolbar -->
+              <div
+                class="flex justify-between items-center px-4 py-3 bg-[#111726]"
+              >
+                <div class="flex gap-3 text-muted">
+                  <button class="hover:text-white transition-colors">
+                    <i class="fas fa-paperclip"></i>
+                  </button>
+                  <button class="hover:text-white transition-colors">
+                    <i class="far fa-smile"></i>
+                  </button>
+                  <button class="hover:text-white transition-colors">
+                    <i class="far fa-file-alt"></i>
+                  </button>
+                  <button class="hover:text-white transition-colors">
+                    <i class="fas fa-bolt"></i>
+                  </button>
+                </div>
+                <div class="flex rounded-lg overflow-hidden">
+                  <button
+                  id="sendMessageBtn"
+                  onclick="sendMessage()"
+
+
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 text-sm font-medium transition-colors"
+                  >
+                    Send
+                  </button>
+                  <div class="w-px bg-blue-700"></div>
+                  <button
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 transition-colors"
+                  >
+                    <i class="fas fa-chevron-down text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Right Details Panel -->
+        <div
+          class="w-[280px] flex flex-col gap-5 overflow-y-auto shrink-0 pr-1"
+        >
+          <!-- Contact Info -->
+          <div class="panel-bg rounded-xl border border-color p-5">
+            <h3 class="font-semibold mb-4 text-base">Contact Information</h3>
+            <div class="space-y-4 text-sm">
+              <div class="flex items-center gap-3 text-gray-300">
+                <i class="far fa-envelope text-muted w-4 text-center"></i>
+                <a
+                  id="profileEmail"
+                  href="#"
+                  class="text-blue-400 hover:underline truncate"
+                  >billing@globalreach.com</a
+                >
+              </div>
+              <div class="flex items-center gap-3 text-gray-300">
+                <i class="fas fa-phone-alt text-muted w-4 text-center"></i>
+                <span id="profilePhone">+1 (555) 123-4567</span>
+              </div>
+              <div class="flex items-center gap-3 text-gray-300">
+                <i class="fas fa-map-marker-alt text-muted w-4 text-center"></i>
+                <span id="profileCountry">New York, USA</span>
+              </div>
+              <div class="flex items-center gap-3 text-gray-300">
+                <i class="fas fa-globe text-muted w-4 text-center"></i>
+                <a
+                  id="profileWebsite"
+                  href="#"
+                  class="text-blue-400 hover:underline truncate"
+                  >www.globalreachmedia.com</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversation Details -->
+          <div class="panel-bg rounded-xl border border-color p-5">
+            <h3 class="font-semibold mb-4 text-base">Conversation Details</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-muted text-sm">Status</span>
+                <div
+                  class="flex items-center gap-2 bg-[#1A2235] px-2.5 py-1 rounded-md border border-color cursor-pointer"
+                >
+                  <span
+                    id="profileStatus"
+                    class="text-blue-400 text-xs font-medium"
+                    >Open</span
+                  >
+                  <i class="fas fa-chevron-down text-[10px] text-gray-500"></i>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span id="profilePriority" class="text-muted text-sm"
+                  >Priority</span
+                >
+                <div
+                  class="flex items-center gap-2 bg-[#1A2235] px-2.5 py-1 rounded-md border border-color cursor-pointer"
+                >
+                  <span class="text-orange-400 text-xs font-medium"
+                    >Medium</span
+                  >
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span id="profileChannel" text-muted text-sm">Channel</span>
+                <div
+                  class="flex items-center gap-2 bg-[#1A2235] px-2.5 py-1 rounded-md border border-color cursor-pointer"
+                >
+                  <i class="far fa-envelope text-gray-400 text-xs"></i>
+                  <span class="text-white text-xs font-medium">Email</span>
+                  <i class="fas fa-chevron-down text-[10px] text-gray-500"></i>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-muted text-sm">Assigned To</span>
+                <div
+                  class="flex items-center gap-2 bg-[#1A2235] px-2.5 py-1 rounded-md border border-color cursor-pointer"
+                >
+                  <i class="far fa-user text-gray-400 text-xs"></i>
+                  <span id="profileAssigned" class="text-white text-xs font-medium">Maureene</span>
+                  <i class="fas fa-chevron-down text-[10px] text-gray-500"></i>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <span class="text-muted text-sm">Last Update</span>
+                <span id="profileUpdated" class="text-gray-300 text-xs">Jun 26, 10:24 AM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="panel-bg rounded-xl border border-color p-5 mb-4">
+            <h3 class="font-semibold mb-4 text-base">Quick Actions</h3>
+            <div class="space-y-3">
+              <button
+                class="w-full flex items-center justify-center gap-2 bg-[#1C3A8D] hover:bg-[#1A337A] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(28,58,141,0.2)] border border-[#274BB3]"
+              >
+                <i class="fas fa-link"></i> Send Payment Link
+              </button>
+              <button
+                class="w-full flex items-center justify-center gap-2 bg-[#0E5C3B] hover:bg-[#0C4F33] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(14,92,59,0.2)] border border-[#168053]"
+              >
+                <i class="far fa-paper-plane"></i> Send Reminder
+              </button>
+              <button
+                class="w-full flex items-center justify-center gap-2 bg-[#4B1E8A] hover:bg-[#3D1871] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(75,30,138,0.2)] border border-[#6428B7]"
+              >
+                <i class="fas fa-check"></i> Mark as Resolved
+              </button>
+              <button
+                class="w-full flex items-center justify-center gap-2 bg-[#9B4112] hover:bg-[#85370F] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(155,65,18,0.2)] border border-[#C55317]"
+              >
+                <i class="far fa-calendar-check"></i> Create Task
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+  <script src="/static/js/communications.js"></script>
+</html>

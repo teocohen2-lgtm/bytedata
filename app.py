@@ -515,28 +515,28 @@ if __name__ == "__main__":
             )
 
 
-        scheduler = BackgroundScheduler()
+    scheduler = BackgroundScheduler()
 
-        scheduler.add_job(
+    scheduler.add_job(
             check_new_tickets,
             "interval",
             hours=8
         )
 
-        scheduler.add_job(
+    scheduler.add_job(
             process_leads,
             "interval",
             hours= 1
         )
 
-        scheduler.add_job(
+    scheduler.add_job(
             process_customer_renewals,
             "interval",
             hours= 4
 
         )
 
-        scheduler.start()
+    scheduler.start()
 
     print(
         "Notification Scheduler Started"
@@ -607,6 +607,16 @@ def get_followup_sheet():
 
     return spreadsheet.get_worksheet(5)
 
+def get_onboarding_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet(
+        "Onboarding"
+    )
+
 def load_progress():
 
     if not os.path.exists(PROGRESS_FILE):
@@ -667,6 +677,28 @@ PAYMENT_FOLLOWUP_CSV = (
 
 
 # print(PAYMENT_FOLLOWUP_CSV)
+
+
+def get_communications_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet(
+        "Communications"
+    )
+
+
+def get_notes_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet(
+        "CommunicationNotes"
+    )
 
 
 # =====================================
@@ -1333,8 +1365,9 @@ def communications():
     if session.get("role") != "admin":
         return redirect("/dashboard")
     
-    return render_template("communicationsv2.html" , role=session.get("role")
-)
+    return render_template("communicationsv3.html" , role=session.get("role")
+)    
+
 
 
 @app.route("/communications-data")
@@ -1453,9 +1486,12 @@ def dashboard_data():
 
     try:
 
-        df = pd.read_csv(
-            CUSTOMERS_SHEET_CSV
-        )
+        # df = pd.read_csv(
+        #     CUSTOMERS_SHEET_CSV
+        # )
+        onboarding = get_onboarding_sheet().get_all_records()
+
+        df = pd.DataFrame(onboarding)
 
         df.columns = (
             df.columns
@@ -1466,41 +1502,59 @@ def dashboard_data():
         total_customers = len(df)
 
         active_customers = len(
+
             df[
                 df["status"]
                 .astype(str)
                 .str.lower()
                 == "active"
             ]
+
         )
 
+        today = datetime.now().strftime("%Y-%m-%d")
+
         due_today = len(
+
             df[
-                df["status"]
+                df["next_payment_date"]
                 .astype(str)
-                .str.lower()
-                == "due today"
+                == today
             ]
+
         )
 
         overdue_customers = len(
-            df[
-                df["status"]
-                .astype(str)
-                .str.lower()
-                == "overdue"
-            ]
+
+        df[
+            df["auto_status"]
+            .astype(str)
+            .str.lower()
+            == "overdue"
+        ]
+
         )
 
+        active_df = df[
+                    df["status"]
+                .astype(str)
+                .str.lower()
+                == "active"
+            ]
+
         total_revenue = (
-            pd.to_numeric(
-                df[
-                    "subscription_amount"
-                ],
-                errors="coerce"
-            )
-            .fillna(0)
-            .sum()
+
+         
+
+            
+                pd.to_numeric(
+                    active_df["subscription_amount"],
+                    errors="coerce"
+                )
+                .fillna(0)
+                .sum()
+        
+
         )
 
         customers = (
@@ -2134,6 +2188,628 @@ def close_ticket():
             "message": str(e)
         })
 
+@app.route("/communications-v2data")
+@login_required
+def communications_v2_data():
+
+    try:
+
+        onboarding = (
+            get_onboarding_sheet()
+            .get_all_records()
+        )
+
+        followups = (
+            get_followup_sheet()
+            .get_all_records()
+        )
+
+        customers = []
+
+        #
+        # Active Customers
+        #
+
+        
+
+        for row in onboarding:
+
+            
+
+            customers.append({
+
+                 "conversation_id":
+                    row.get(
+                        "conversation_id",
+                        ""
+                    ),
+
+                "customer_id":
+                    row.get(
+                        "customer_id",
+                        ""
+                    ),
+
+                "lead_id":
+                    row.get(
+                        "lead_id",
+                        ""
+                    ),
+
+                "company_name":
+                    row.get(
+                        "company_name",
+                        ""
+                    ),
+
+                "customer_name":
+                    row.get(
+                        "contact_person",
+                        ""
+                    ),
+
+                "email":
+                    row.get(
+                        "email",
+                        ""
+                    ),
+
+                "phone":
+                    row.get(
+                        "phone",
+                        ""
+                    ),
+
+                "status":
+                    row.get(
+                        "status",
+                        ""
+                    ),
+
+                "payment_status":
+                    row.get(
+                        "payment_stage",
+                        ""
+                    ),
+
+                "dataset_status":
+                    "Completed",
+
+                "assigned_to":
+                    row.get(
+                        "assigned_to",
+                        ""
+                    ),
+
+                "source":
+                    "Customer",
+                "last_message": "",
+                "last_message_time": "",
+                "unread_count": 0,
+                "avatar": row.get(
+                    "company_name",
+                    ""
+                )[:1].upper()
+
+            })
+
+        #
+        # Payment Follow Ups
+        #
+
+        for row in followups:
+
+            customers.append({
+
+                 "conversation_id":
+                    row.get(
+                        "conversation_id",
+                        ""
+                    ),
+
+                "customer_id":"",
+                
+                "lead_id":
+                    row.get(
+                        "lead_id",
+                        ""
+                    ),
+
+                "company_name":
+                    row.get(
+                        "company_name",
+                        ""
+                    ),
+
+                "customer_name":
+                    row.get(
+                        "contact_person",
+                        ""
+                    ),
+
+                "email":
+                    row.get(
+                        "email",
+                        ""
+                    ),
+
+                "phone":
+                    row.get(
+                        "phone",
+                        ""
+                    ),
+
+                "status":
+                    row.get(
+                        "payment_status",
+                        ""
+                    ),
+
+                "payment_status":
+                    row.get(
+                        "payment_status",
+                        ""
+                    ),
+
+                "dataset_status":
+                    "Waiting Payment",
+
+                "assigned_to":
+                    row.get(
+                        "assigned_to",
+                        ""
+                    ),
+
+                "source":
+                    "Follow Up",
+                "last_message": "",
+                "last_message_time": "",
+                "unread_count": 0,
+                "avatar": row.get(
+                    "company_name",
+                    ""
+                )[:1].upper()
+
+            })
+
+        return jsonify(
+
+            customers
+
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+
+                str(e)
+
+        })
+
+@app.route("/conversation/<lead_id>")
+@login_required
+def conversation(lead_id):
+
+    try:
+
+        sheet = get_communications_sheet()
+
+        rows = sheet.get_all_records()
+
+        messages = []
+
+        for row in rows:
+
+            if str(
+                row.get(
+                    "lead_id",
+                    ""
+                )
+            ) != str(lead_id):
+
+                continu
+
+            messages.append({
+
+                "sender":
+                    row.get(
+                        "sender",
+                        ""
+                    ),
+
+                "message":
+                    row.get(
+                        "message",
+                        ""
+                    ),
+
+                "created_at":
+                    row.get(
+                        "created_at",
+                        ""
+                    )
+
+            })
+
+        return jsonify(
+
+            messages
+
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+
+                str(e)
+
+        })
+
+@app.route("/send-message", methods=["POST"])
+@login_required
+def send_message():
+
+    try:
+
+        data = request.json
+
+        # print(data)
+
+        sheet = get_communications_sheet()
+
+        now = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        message_id = "MSG" + now.replace(
+            "-",
+            ""
+        ).replace(
+            ":",
+            ""
+        ).replace(
+            " ",
+            ""
+        )
+
+        conversation_id = ""
+
+        records = sheet.get_all_records()
+
+        for row in records:
+
+            if row.get("lead_id") == data.get("lead_id"):
+
+                conversation_id = row.get(
+                    "conversation_id",
+                    ""
+                )
+
+                break
+        if conversation_id == "":
+
+            conversation_id = "CONV" + datetime.now().strftime("%Y%m%d%H%M%S")
+
+        sheet.append_row([
+
+            conversation_id,
+
+            message_id,
+
+            data.get(
+                "customer_id",
+                ""
+            ),
+
+            data.get(
+                "lead_id",
+                ""
+            ),
+
+            data.get(
+                "company_name",
+                ""
+            ),
+
+            data.get(
+                "customer_name",
+                ""
+            ),
+
+            data.get(
+                "customer_email",
+                ""
+            ),
+
+            data.get(
+                "customer_phone",
+                ""
+            ),
+
+            "Agent",
+
+            "Manual",
+
+            "",
+
+            data.get(
+                "message",
+                ""
+            ),
+
+            "",
+
+            "Open",
+
+            "Medium",
+
+            session.get(
+                "username",
+                "Admin"
+            ),
+
+            "Dashboard",
+
+            now,
+
+            "Read",
+
+            "",
+
+            "",
+
+            data.get(
+                "payment_status",
+                ""
+            ),
+
+            data.get(
+                "dataset_status",
+                ""
+            )
+
+        ])
+
+        return jsonify({
+
+            "status":"success",
+
+            "created_at":now
+
+        })
+
+    except Exception as e:
+
+        return jsonify({
+
+            "status":"error",
+
+            "message":str(e)
+
+        })
+    
+@app.route("/communications-dashboard")
+@login_required
+def communications_dashboard():
+
+    today = datetime.now().date()
+    yesterday = today - timedelta(days=1)
+
+    today_messages = 0
+    yesterday_messages = 0
+
+    today_conversations = set()
+    yesterday_conversations = set()
+
+    today_resolved = 0
+    yesterday_resolved = 0
+
+    try:
+
+        sheet = get_communications_sheet()
+
+        rows = sheet.get_all_records()
+
+        conversation_ids = set()
+
+        messages_sent = 0
+
+        resolved = 0
+
+        last_sender = {}
+
+        for row in rows:
+
+            created_at = row.get("created_at", "")
+
+            row_date = None
+
+            try:
+                row_date = datetime.strptime(
+                    created_at,
+                    "%Y-%m-%d %H:%M:%S"
+                ).date()
+            except:
+                pass
+
+            conversation_id = row.get(
+                "conversation_id",
+                ""
+            )
+
+            sender = (
+                row.get(
+                    "sender",
+                    ""
+                )
+                .strip()
+                .lower()
+            )
+
+            status = (
+                row.get(
+                    "status",
+                    ""
+                )
+                .strip()
+                .lower()
+            )
+
+            if conversation_id:
+
+                conversation_ids.add(
+                    conversation_id
+                )
+
+                if row_date == today:
+                    today_conversations.add(conversation_id)
+
+                elif row_date == yesterday:
+                    yesterday_conversations.add(conversation_id)
+
+                last_sender[
+                    conversation_id
+                ] = sender
+
+            if sender in [
+                "agent",
+                "admin",
+                "system",
+                "bytedata"
+            ]:
+
+                messages_sent += 1
+
+                if row_date == today:
+                    today_messages += 1
+
+                elif row_date == yesterday:
+                    yesterday_messages += 1
+
+            if status in [
+                "resolved",
+                "closed"
+            ]:
+
+                resolved += 1
+
+                if row_date == today:
+                    today_resolved += 1
+
+                elif row_date == yesterday:
+                    yesterday_resolved += 1
+
+        awaiting = sum(
+
+            1
+
+            for sender in
+
+            last_sender.values()
+
+            if sender in [
+
+                "agent",
+
+                "admin",
+
+                "system",
+
+                "bytedata"
+
+            ]
+
+        )
+
+        def percent_change(today_value, yesterday_value):
+
+            if yesterday_value == 0:
+
+                if today_value == 0:
+                    return 0
+
+                return 100
+
+            return round(
+                ((today_value - yesterday_value) / yesterday_value) * 100,
+                1
+            )
+
+        return jsonify({
+
+    "total_conversations": len(conversation_ids),
+
+    "conversation_change":
+        percent_change(
+            len(today_conversations),
+            len(yesterday_conversations)
+        ),
+
+    "messages_sent": messages_sent,
+
+    "messages_change":
+        percent_change(
+            today_messages,
+            yesterday_messages
+        ),
+
+    "awaiting_response": awaiting,
+
+    "resolved": resolved,
+
+    "resolved_change":
+        percent_change(
+            today_resolved,
+            yesterday_resolved
+        ),
+    "today_messages":today_messages,
+
+    "today_change":
+
+        percent_change(
+
+            today_messages,
+
+            yesterday_messages
+
+        )
+
+})
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+
+                str(e)
+
+        })
+    
+
+@app.route("/current-user")
+@login_required
+def current_user():
+
+    username = session.get("username", "")
+
+    role = session.get("role", "")
+
+    avatar = username[:1].upper() if username else "?"
+
+    return jsonify({
+
+        "name": username,
+
+        "role": role,
+
+        "avatar": avatar
+
+    })
 
 # =====================================
 # LOGOUT
