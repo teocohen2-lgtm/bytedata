@@ -326,49 +326,24 @@
             class="flex-1 overflow-y-auto px-2 pb-2 space-y-1"
           ></div>
 
-          <!-- Pagination -->
-          <div class="p-4 border-t border-color flex flex-col gap-3">
-            <div class="text-xs text-muted text-center">
-              Showing 1 to 7 of 128 conversations
-            </div>
-            <div class="flex justify-center gap-1">
-              <button
-                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
-              >
-                <i class="fas fa-chevron-left text-xs"></i>
-              </button>
-              <button
-                class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center"
-              >
-                1
-              </button>
-              <button
-                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
-              >
-                2
-              </button>
-              <button
-                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
-              >
-                3
-              </button>
-              <button
-                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
-              >
-                ...
-              </button>
-              <button
-                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
-              >
-                16
-              </button>
-              <button
-                class="w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white"
-              >
-                <i class="fas fa-chevron-right text-xs"></i>
-              </button>
-            </div>
+                  <!-- Pagination -->
+        <div class="p-4 border-t border-color flex flex-col gap-3">
+
+          <div
+            id="paginationInfo"
+            class="text-xs text-muted text-center"
+          >
+            Showing 1 to 20 of 0 conversations
           </div>
+
+          <div
+            id="pagination"
+            class="flex justify-center gap-1"
+          >
+
+          </div>
+
+        </div>
         </div>
 
         <!-- Column 2: Main Chat -->
@@ -591,21 +566,25 @@
             <h3 class="font-semibold mb-4 text-base">Quick Actions</h3>
             <div class="space-y-3">
               <button
-                class="w-full flex items-center justify-center gap-2 bg-[#1C3A8D] hover:bg-[#1A337A] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(28,58,141,0.2)] border border-[#274BB3]"
+               onclick="sendPaymentLink()" class="w-full flex items-center justify-center gap-2 bg-[#1C3A8D] hover:bg-[#1A337A] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(28,58,141,0.2)] border border-[#274BB3]"
               >
                 <i class="fas fa-link"></i> Send Payment Link
               </button>
               <button
-                class="w-full flex items-center justify-center gap-2 bg-[#0E5C3B] hover:bg-[#0C4F33] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(14,92,59,0.2)] border border-[#168053]"
+                onclick="sendReminder()" class="w-full flex items-center justify-center gap-2 bg-[#0E5C3B] hover:bg-[#0C4F33] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(14,92,59,0.2)] border border-[#168053]"
               >
                 <i class="far fa-paper-plane"></i> Send Reminder
               </button>
               <button
+              onclick="markConversationResolved()"
+
                 class="w-full flex items-center justify-center gap-2 bg-[#4B1E8A] hover:bg-[#3D1871] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(75,30,138,0.2)] border border-[#6428B7]"
               >
                 <i class="fas fa-check"></i> Mark as Resolved
               </button>
               <button
+              onclick="openTaskModal()"
+
                 class="w-full flex items-center justify-center gap-2 bg-[#9B4112] hover:bg-[#85370F] text-white py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(155,65,18,0.2)] border border-[#C55317]"
               >
                 <i class="far fa-calendar-check"></i> Create Task
@@ -615,6 +594,65 @@
         </div>
       </div>
     </main>
+    <div
+  id="taskModal"
+  class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50"
+>
+  <div class="panel-bg rounded-xl border border-color w-[520px] p-6 shadow-xl">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-lg font-semibold text-white">Create Support Task</h3>
+      <button onclick="closeTaskModal()" class="text-muted hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="text-xs text-muted">Company</label>
+        <input id="taskCompany" disabled class="w-full mt-1 bg-[#111726] border border-color rounded-lg px-3 py-2 text-sm text-white" />
+      </div>
+
+      <div>
+        <label class="text-xs text-muted">Customer</label>
+        <input id="taskCustomer" disabled class="w-full mt-1 bg-[#111726] border border-color rounded-lg px-3 py-2 text-sm text-white" />
+      </div>
+
+      <div>
+        <label class="text-xs text-muted">Task Title</label>
+        <input id="taskTitle" placeholder="Example: Check missing dataset rows" class="w-full mt-1 bg-[#111726] border border-color rounded-lg px-3 py-2 text-sm text-white" />
+      </div>
+
+      <div>
+        <label class="text-xs text-muted">Task Description</label>
+        <textarea id="taskDescription" rows="4" placeholder="Enter task details..." class="w-full mt-1 bg-[#111726] border border-color rounded-lg px-3 py-2 text-sm text-white resize-none"></textarea>
+      </div>
+
+      <div>
+        <label class="text-xs text-muted">Priority</label>
+        <select id="taskPriority" class="w-full mt-1 bg-[#111726] border border-color rounded-lg px-3 py-2 text-sm text-white">
+          <option>Low</option>
+          <option selected>Medium</option>
+          <option>High</option>
+          <option>Urgent</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-xs text-muted">Due Date</label>
+        <input id="taskDueDate" type="date" class="w-full mt-1 bg-[#111726] border border-color rounded-lg px-3 py-2 text-sm text-white" />
+      </div>
+
+      <button
+        id="submitTaskBtn"
+        onclick="submitSupportTask()"
+        class="w-full bg-[#9B4112] hover:bg-[#85370F] text-white py-2.5 rounded-lg text-sm font-medium"
+      >
+        <i class="far fa-calendar-check"></i> Submit Task
+      </button>
+      <div id="taskResult"></div>
+    </div>
+  </div>
+</div>
   </body>
   <script src="/static/js/communications.js"></script>
 </html>

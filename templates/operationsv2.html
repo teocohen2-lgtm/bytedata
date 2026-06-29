@@ -731,7 +731,7 @@
                 </div>
               </div>
               <button class="health-btn" onclick="runHealthCheck()">
-                <i class="fa-solid fa-stethoscope"></i> Run System Checks
+                <i class="fa-solid fa-stethoscope"></i> Check Payment Status
               </button>
             </div>
 
@@ -846,18 +846,97 @@
 
       function runHealthCheck() {
         document.getElementById("healthResults").innerHTML = `
-            <div class="health-item">Bank Verification <div class="status-indicator"><span class="dot yellow"></span> Checking...</div></div>
-            <div class="health-item">Payment Verification <div class="status-indicator"><span class="dot yellow"></span> Checking...</div></div>
-            <div class="health-item">Fraud Check <div class="status-indicator"><span class="dot yellow"></span> Checking...</div></div>
-        `;
+    <div class="health-item">Bank Verification <div class="status-indicator"><span class="dot yellow"></span> Checking...</div></div>
+    <div class="health-item">Payment Verification <div class="status-indicator"><span class="dot yellow"></span> Checking...</div></div>
+    <div class="health-item">Fraud Check <div class="status-indicator"><span class="dot yellow"></span> Checking...</div></div>
+`;
+
+        paymentVerified = false;
+        document.getElementById("markPaidBtn").disabled = true;
+
         setTimeout(() => {
-          document.getElementById("healthResults").innerHTML = `
-            <div class="health-item">Bank Verification <div class="status-indicator"><span class="dot green"></span>Payment Paid</div></div>
-            <div class="health-item">Payment Verification <div class="status-indicator"><span class="dot green"></span> Verified</div></div>
-            <div class="health-item">Fraud Check <div class="status-indicator"><span class="dot green"></span> Passed</div></div>
-            `;
-          paymentVerified = true;
-          document.getElementById("markPaidBtn").disabled = false;
+          const success = Math.random() < 0.1;
+
+          if (success) {
+            document.getElementById("healthResults").innerHTML = `
+            <div class="health-item">
+                Bank Verification
+                <div class="status-indicator">
+                    <span class="dot green"></span> Payment Paid
+                </div>
+            </div>
+
+            <div class="health-item">
+                Payment Verification
+                <div class="status-indicator">
+                    <span class="dot green"></span> Verified
+                </div>
+            </div>
+
+            <div class="health-item">
+                Fraud Check
+                <div class="status-indicator">
+                    <span class="dot green"></span> Passed
+                </div>
+            </div>
+        `;
+
+            paymentVerified = true;
+            document.getElementById("markPaidBtn").disabled = false;
+          } else {
+            const failures = [
+              ["Bank Verification", "Bank account not found"],
+
+              ["Payment Verification", "Payment not received"],
+
+              ["Fraud Check", "High risk transaction"],
+
+              ["Payment Verification", "Payment still pending"],
+
+              ["Bank Verification", "Invalid account number"],
+
+              ["Fraud Check", "Manual review required"],
+            ];
+
+            const fail = failures[Math.floor(Math.random() * failures.length)];
+
+            document.getElementById("healthResults").innerHTML = `
+            <div class="health-item">
+                Bank Verification
+                <div class="status-indicator">
+                    <span class="dot ${
+                      fail[0] === "Bank Verification" ? "red" : "green"
+                    }"></span>
+                    ${
+                      fail[0] === "Bank Verification" ? fail[1] : "Payment Paid"
+                    }
+                </div>
+            </div>
+
+            <div class="health-item">
+                Payment Verification
+                <div class="status-indicator">
+                    <span class="dot ${
+                      fail[0] === "Payment Verification" ? "red" : "green"
+                    }"></span>
+                    ${fail[0] === "Payment Verification" ? fail[1] : "Verified"}
+                </div>
+            </div>
+
+            <div class="health-item">
+                Fraud Check
+                <div class="status-indicator">
+                    <span class="dot ${
+                      fail[0] === "Fraud Check" ? "red" : "green"
+                    }"></span>
+                    ${fail[0] === "Fraud Check" ? fail[1] : "Passed"}
+                </div>
+            </div>
+        `;
+
+            paymentVerified = false;
+            document.getElementById("markPaidBtn").disabled = true;
+          }
         }, 1500);
       }
 
@@ -873,15 +952,39 @@
 
       async function markPaid() {
         if (!paymentVerified) return;
-        const res = await fetch("/mark-paid", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lead_id: current.lead_id }),
-        });
-        const result = await res.json();
-        if (result.status === "success") {
-          closeModal();
-          loadData();
+
+        const btn = document.getElementById("markPaidBtn");
+
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+
+        try {
+          const res = await fetch("/mark-paid", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lead_id: current.lead_id }),
+          });
+
+          const result = await res.json();
+
+          if (result.status === "success") {
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Payment Confirmed`;
+
+            setTimeout(() => {
+              closeModal();
+              loadData();
+            }, 800);
+          } else {
+            alert(result.message || "Payment update failed.");
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Mark as Paid`;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Something went wrong while marking payment as paid.");
+
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-check"></i> Mark as Paid`;
         }
       }
     </script>

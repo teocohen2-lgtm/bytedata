@@ -1,6 +1,9 @@
 let customers = [];
 let filteredCustomers = [];
 let selectedCustomer = null;
+const PAGE_SIZE = 20;
+let currentPage = 1;
+let allCustomers = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   loadCommunicationDashboard();
@@ -18,9 +21,9 @@ async function loadCustomers() {
   try {
     const res = await fetch("/communications-v2data");
 
-    customers = await res.json();
+    allCustomers = await res.json();
 
-    filteredCustomers = [...customers];
+    filteredCustomers = [...allCustomers];
 
     renderCustomerList();
   } catch (err) {
@@ -43,14 +46,105 @@ function filterCustomers() {
 
 function renderCustomerList() {
   const list = document.getElementById("conversationList");
+  const start = (currentPage - 1) * PAGE_SIZE;
+
+  const end = start + PAGE_SIZE;
+
+  const pageCustomers = filteredCustomers.slice(start, end);
 
   list.innerHTML = "";
 
-  filteredCustomers.forEach((customer) => {
+  pageCustomers.forEach((customer) => {
     const card = createCustomerCard(customer);
 
     list.appendChild(card);
   });
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = filteredCustomers.length;
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const start = total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+
+  const end = Math.min(currentPage * PAGE_SIZE, total);
+
+  document.getElementById(
+    "paginationInfo"
+  ).innerText = `Showing ${start} to ${end} of ${total} conversations`;
+
+  const container = document.getElementById("pagination");
+
+  container.innerHTML = "";
+
+  // Previous
+
+  const prev = document.createElement("button");
+
+  prev.className =
+    "w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white";
+
+  prev.innerHTML = '<i class="fas fa-chevron-left text-xs"></i>';
+
+  prev.disabled = currentPage === 1;
+
+  prev.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+
+      renderCustomerList();
+    }
+  };
+
+  container.appendChild(prev);
+
+  // Pages
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+
+    btn.innerText = i;
+
+    if (i === currentPage) {
+      btn.className =
+        "w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center";
+    } else {
+      btn.className =
+        "w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white";
+    }
+
+    btn.onclick = () => {
+      currentPage = i;
+
+      renderCustomerList();
+    };
+
+    container.appendChild(btn);
+  }
+
+  // Next
+
+  const next = document.createElement("button");
+
+  next.className =
+    "w-8 h-8 rounded-lg inner-bg border border-color flex items-center justify-center text-muted hover:text-white";
+
+  next.innerHTML = '<i class="fas fa-chevron-right text-xs"></i>';
+
+  next.disabled = currentPage === totalPages;
+
+  next.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+
+      renderCustomerList();
+    }
+  };
+
+  container.appendChild(next);
 }
 
 function createCustomerCard(customer) {
@@ -71,7 +165,7 @@ function createCustomerCard(customer) {
   div.className = `p-3 rounded-xl border cursor-pointer flex gap-3 transition-colors ${activeClass}`;
 
   div.onclick = () => {
-    selectCustomer(customer);
+    selectCustomer(customer, div);
   };
 
   div.innerHTML = `
@@ -285,13 +379,37 @@ function renderMessages(messages) {
 }
 
 async function loadConversation(leadId) {
+  console.log("Loading conversation:", leadId);
+
+  const chat = document.getElementById("chatMessages");
+
+  chat.innerHTML = `
+  <div class="flex items-center justify-center h-full text-gray-400">
+      <div class="text-center">
+          <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+          <div>Loading conversation...</div>
+      </div>
+  </div>
+  `;
   const res = await fetch("/conversation/" + leadId);
 
   console.log("Loading conversation:", leadId);
 
   const messages = await res.json();
 
+  if (!Array.isArray(messages)) {
+    console.error(messages);
+
+    return;
+  }
+
   renderMessages(messages);
+
+  fetch(`/mark-conversation-read/${leadId}`, {
+    method: "POST",
+  });
+
+  // await loadConversation();
 }
 
 async function sendMessage() {
@@ -396,12 +514,20 @@ function appendAgentMessage(
   chat.scrollTop = chat.scrollHeight;
 }
 
-function selectCustomer(customer) {
+function selectCustomer(customer, card) {
   selectedCustomer = customer;
+  customer.unread_count = 0;
 
-  renderCustomerList();
+  // renderCustomerList();
+  document
+    .querySelectorAll("#conversationList > div")
+    .forEach((c) => c.classList.remove("border-blue-600", "bg-blue-900/10"));
 
+  card.classList.add("border-blue-600", "bg-blue-900/10");
   updateProfile(customer);
+
+  // Remove unread badge immediately
+  card.querySelector(".bg-blue-600")?.remove();
 
   loadConversation(customer.lead_id);
 }
@@ -490,4 +616,212 @@ function setTrend(id, value) {
 
     el.className = "text-red-500 text-xs font-medium";
   }
+}
+
+// setInterval(async () => {
+//   // Refresh left conversation list
+//   await loadCustomers();
+
+//   // Refresh current open chat
+//   if (selectedCustomer) {
+//     const res = await fetch("/conversation/" + selectedCustomer.lead_id);
+
+//     const messages = await res.json();
+
+//     renderMessages(messages);
+//   }
+// }, 30000);
+
+function sendReminder() {
+  alert("Reminder Email Sent Successfully");
+}
+function sendPaymentLink() {
+  alert("Payment Link Sent Successfully");
+}
+function checkPaymentStatus() {
+  alert("Payment status check completed");
+}
+
+async function markConversationResolved() {
+  if (!selectedCustomer) {
+    alert("Select customer first.");
+    return;
+  }
+
+  const btn = event.currentTarget;
+
+  const confirmClose = confirm(
+    "Mark this conversation as resolved?\n\nThe AI customer will stop replying."
+  );
+
+  if (!confirmClose) return;
+
+  btn.disabled = true;
+
+  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+  try {
+    const res = await fetch("/resolve-conversation", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        customer_id: selectedCustomer.customer_id,
+
+        lead_id: selectedCustomer.lead_id,
+      }),
+    });
+
+    const result = await res.json();
+
+    if (result.status === "success") {
+      btn.innerHTML = `<i class="fas fa-check"></i> Resolved`;
+
+      setTimeout(() => {
+        alert("Conversation marked as resolved.");
+
+        closeConversation();
+
+        loadCustomers();
+      }, 600);
+    } else {
+      alert(result.message);
+
+      btn.disabled = false;
+
+      btn.innerHTML = `<i class="fas fa-check"></i> Mark as Resolved`;
+    }
+  } catch (err) {
+    console.error(err);
+
+    alert("Something went wrong.");
+
+    btn.disabled = false;
+
+    btn.innerHTML = `<i class="fas fa-check"></i> Mark as Resolved`;
+  }
+}
+
+function openTaskModal() {
+  if (!selectedCustomer) {
+    alert("Select customer first.");
+    return;
+  }
+  document.getElementById("taskResult").innerHTML = "";
+
+  document.getElementById("submitTaskBtn").disabled = false;
+
+  document.getElementById(
+    "submitTaskBtn"
+  ).innerHTML = `<i class="far fa-calendar-check"></i> Submit Task`;
+
+  document.getElementById("taskCompany").value =
+    selectedCustomer.company_name || "";
+
+  document.getElementById("taskCustomer").value =
+    selectedCustomer.customer_name || "";
+
+  document.getElementById("taskTitle").value = "";
+
+  document.getElementById("taskDescription").value = "";
+
+  document.getElementById("taskPriority").value = "Medium";
+
+  document.getElementById("taskDueDate").value = "";
+
+  document.getElementById("taskModal").classList.remove("hidden");
+  document.getElementById("taskModal").classList.add("flex");
+}
+
+function closeTaskModal() {
+  document.getElementById("taskModal").classList.add("hidden");
+  document.getElementById("taskModal").classList.remove("flex");
+}
+
+async function submitSupportTask() {
+  if (!selectedCustomer) {
+    alert("Select customer first.");
+    return;
+  }
+
+  const title = document.getElementById("taskTitle").value.trim();
+  const description = document.getElementById("taskDescription").value.trim();
+
+  if (!title || !description) {
+    alert("Please enter task title and description.");
+    return;
+  }
+
+  const btn = document.getElementById("submitTaskBtn");
+
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Creating...`;
+
+  try {
+    const res = await fetch("/create-support-task", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        conversation_id: selectedCustomer.conversation_id || "",
+        customer_id: selectedCustomer.customer_id || "",
+        lead_id: selectedCustomer.lead_id || "",
+        company_name: selectedCustomer.company_name || "",
+        customer_name: selectedCustomer.customer_name || "",
+        customer_email: selectedCustomer.email || "",
+        assigned_to: selectedCustomer.assigned_to || "",
+        task_title: title,
+        task_description: description,
+        priority: document.getElementById("taskPriority").value,
+        due_date: document.getElementById("taskDueDate").value,
+        notes: "",
+      }),
+    });
+
+    const result = await res.json();
+
+    if (result.status === "success") {
+      btn.innerHTML = `<i class="fas fa-check"></i> Task Created`;
+
+      document.getElementById("taskResult").innerHTML = `
+        <div class="mt-4 p-3 rounded-lg bg-green-900/30 border border-green-600 text-sm text-green-200">
+          <div class="mb-2 font-medium">Task created successfully</div>
+    
+          <div class="flex items-center justify-between gap-2 bg-[#111726] border border-color rounded-lg px-3 py-2">
+            <span id="createdTaskId" class="font-mono text-white">${result.task_id}</span>
+    
+            <button
+              onclick="copyTaskId()"
+              class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+      `;
+
+      btn.disabled = true;
+    } else {
+      alert(result.message || "Failed to create task.");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="far fa-calendar-check"></i> Submit Task`;
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong while creating task.");
+    btn.disabled = false;
+    btn.innerHTML = `<i class="far fa-calendar-check"></i> Submit Task`;
+  }
+}
+
+function copyTaskId() {
+  const taskId = document.getElementById("createdTaskId").innerText;
+
+  navigator.clipboard.writeText(taskId);
+
+  alert("Task ID copied: " + taskId);
 }

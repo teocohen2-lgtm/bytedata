@@ -13,7 +13,10 @@ from google.oauth2.service_account import Credentials
 from pandasql import sqldf
 from datetime import datetime , timedelta
 import random
- 
+from customer_ai import process_customer_ai
+import customer_ai
+
+
 
 
  
@@ -25,6 +28,8 @@ last_load = 0
 # if os.environ.get(
 #     "WERKZEUG_RUN_MAIN"
 # ) == "true":
+
+
 
 
 PLAN_CONFIG = {
@@ -78,6 +83,13 @@ gc = gspread.authorize(
 )
 
 
+def get_support_tasks_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet("Support_Tasks")
 
 #logic for lead core logic 
 
@@ -93,11 +105,11 @@ if __name__ == "__main__":
                 "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
             )
 
-            leads_sheet = spreadsheet.get_worksheet(4)
+            leads_sheet = spreadsheet.worksheet("Leads")
 
-            followup_sheet = spreadsheet.get_worksheet(5)
+            followup_sheet = spreadsheet.worksheet("Payment_Follow_Up")
 
-            onboarding_sheet = spreadsheet.get_worksheet(6)
+            onboarding_sheet = spreadsheet.worksheet("Onboarding")
 
             leads = leads_sheet.get_all_records()
 
@@ -338,9 +350,9 @@ if __name__ == "__main__":
                 "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
             )
 
-            onboarding_sheet = spreadsheet.get_worksheet(6)
+            onboarding_sheet = spreadsheet.worksheet("Onboarding")
 
-            followup_sheet = spreadsheet.get_worksheet(5)
+            followup_sheet = spreadsheet.worksheet("Payment_Follow_Up")
 
             records = onboarding_sheet.get_all_records()
 
@@ -527,6 +539,8 @@ if __name__ == "__main__":
             process_leads,
             "interval",
             hours= 1
+            # seconds=30
+
         )
 
     scheduler.add_job(
@@ -542,6 +556,47 @@ if __name__ == "__main__":
         "Notification Scheduler Started"
     )
 
+def get_customer_ai_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet("CustomerAI")
+
+def get_onboarding_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet(
+        "Onboarding"
+    )
+
+def get_communications_sheet():
+
+    spreadsheet = gc.open_by_key(
+        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+    )
+
+    return spreadsheet.worksheet(
+        "Communications"
+    )
+
+customer_ai.initialize(
+    get_customer_ai_sheet,
+    get_onboarding_sheet,
+    get_communications_sheet
+)
+
+scheduler.add_job(
+    customer_ai.process_customer_ai,
+    "interval",
+     minutes=1,
+    id="customer_ai"
+)
+
 all_data = []
 
 PROGRESS_FILE = "progress.json"
@@ -553,6 +608,7 @@ app.secret_key = "bytedata_secure_session_key"
 
 def is_admin():
     return session.get("role") == "admin"
+
 
 
 def get_sheet_data():
@@ -593,9 +649,7 @@ def get_main_sheet():
 
     )
 
-    worksheet = spreadsheet.get_worksheet(
-        0
-    )
+    worksheet = spreadsheet.worksheet("Sheet1")
 
     return worksheet
 
@@ -605,17 +659,9 @@ def get_followup_sheet():
         "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
     )
 
-    return spreadsheet.get_worksheet(5)
+    return spreadsheet.worksheet("Payment_Follow_Up")
 
-def get_onboarding_sheet():
 
-    spreadsheet = gc.open_by_key(
-        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
-    )
-
-    return spreadsheet.worksheet(
-        "Onboarding"
-    )
 
 def load_progress():
 
@@ -679,15 +725,7 @@ PAYMENT_FOLLOWUP_CSV = (
 # print(PAYMENT_FOLLOWUP_CSV)
 
 
-def get_communications_sheet():
 
-    spreadsheet = gc.open_by_key(
-        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
-    )
-
-    return spreadsheet.worksheet(
-        "Communications"
-    )
 
 
 def get_notes_sheet():
@@ -1009,7 +1047,7 @@ def mark_paid():
             "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
         )
 
-        leads_sheet = spreadsheet.get_worksheet(4)
+        leads_sheet = spreadsheet.worksheet("Leads")
 
         leads = leads_sheet.get_all_records()
 
@@ -1027,9 +1065,9 @@ def mark_paid():
                     break    
 
 
-        followup_sheet = spreadsheet.get_worksheet(5)
+        followup_sheet = spreadsheet.worksheet("Payment_Follow_Up")
 
-        onboarding_sheet = spreadsheet.get_worksheet(6)
+        onboarding_sheet = spreadsheet.worksheet("Onboarding")
 
         followups = followup_sheet.get_all_records()
 
@@ -2204,6 +2242,49 @@ def communications_v2_data():
             .get_all_records()
         )
 
+        communications = (
+        get_communications_sheet()
+        .get_all_records()
+        ) 
+
+        conversation_lookup = {}
+
+        for msg in communications:
+
+            lead = str(msg.get("lead_id", ""))
+
+            if lead == "":
+                continue
+
+            if lead not in conversation_lookup:
+
+                conversation_lookup[lead] = {
+
+                    "last_message": "",
+
+                    "last_message_time": "",
+
+                    "unread_count": 0
+
+                }
+
+            conversation_lookup[lead]["last_message"] = msg.get(
+                "message",
+                ""
+            )
+
+            conversation_lookup[lead]["last_message_time"] = msg.get(
+                "created_at",
+                ""
+            )
+
+            if (
+                msg.get("sender", "").lower() == "customer"
+                and msg.get("read_status", "").lower() == "unread"
+            ):
+
+                conversation_lookup[lead]["unread_count"] += 1  
+
         customers = []
 
         #
@@ -2283,9 +2364,31 @@ def communications_v2_data():
 
                 "source":
                     "Customer",
-                "last_message": "",
-                "last_message_time": "",
-                "unread_count": 0,
+                "last_message":
+                conversation_lookup.get(
+                    row.get("lead_id"),
+                    {}
+                ).get(
+                    "last_message",
+                    ""
+                ),
+                                    
+                "last_message_time":
+                conversation_lookup.get(
+                    row.get("lead_id"),
+                    {}
+                ).get(
+                    "last_message_time",
+                    ""
+                ),  
+                "unread_count":
+                conversation_lookup.get(
+                    row.get("lead_id"),
+                    {}
+                ).get(
+                    "unread_count",
+                    0
+                ),  
                 "avatar": row.get(
                     "company_name",
                     ""
@@ -2371,6 +2474,34 @@ def communications_v2_data():
                 )[:1].upper()
 
             })
+        
+        def sort_key(c):
+
+            unread = c.get("unread_count", 0)
+
+            try:
+                last = datetime.strptime(
+                    c.get("last_message_time", ""),
+                    "%Y-%m-%d %H:%M:%S"
+                )
+            except:
+                last = datetime.min
+
+            return (
+
+                unread > 0,
+
+                last
+
+            )
+
+        customers.sort(
+            key=sort_key,
+            reverse=True
+        )
+       
+
+    
 
         return jsonify(
 
@@ -2409,7 +2540,7 @@ def conversation(lead_id):
                 )
             ) != str(lead_id):
 
-                continu
+                continue
 
             messages.append({
 
@@ -2573,6 +2704,38 @@ def send_message():
             )
 
         ])
+
+        customer_ai_sheet = get_customer_ai_sheet()
+
+        ai_rows = customer_ai_sheet.get_all_records()
+
+        for i, row in enumerate(ai_rows, start=2):
+
+            if row.get("customer_id") == data.get("customer_id"):
+
+                row["conversation_state"] = "Open"
+                row["waiting_for"] = "AI"
+
+                customer_ai_sheet.update(
+                    f"A{i}:M{i}",
+                    [[
+                        row["customer_id"],
+                        row["enabled"],
+                        row["personality"],
+                        row["customer_role"],
+                        row["goal"],
+                        row["conversation_state"],
+                        row["waiting_for"],
+                        row["message_count"],
+                        row["last_ai_reply"],
+                        row["next_reply_after"],
+                        row["reply_probability"],
+                        row["max_messages"],
+                        row["memory_summary"]
+                    ]]
+                )
+
+                break
 
         return jsonify({
 
@@ -2811,6 +2974,179 @@ def current_user():
 
     })
 
+@app.route("/mark-conversation-read/<lead_id>", methods=["POST"])
+@login_required
+def mark_conversation_read(lead_id):
+
+    sheet = get_communications_sheet()
+
+    records = sheet.get_all_records()
+
+    for i, row in enumerate(records, start=2):
+
+        if (
+            str(row.get("lead_id")) == str(lead_id)
+            and row.get("sender", "").lower() == "customer"
+            and row.get("read_status", "").lower() == "unread"
+        ):
+
+            sheet.update_cell(i, 19, "Read")
+
+    return jsonify({"success": True})
+
+
+
+
+@app.route("/resolve-conversation", methods=["POST"])
+@login_required
+def resolve_conversation():
+
+    try:
+
+        data = request.json
+
+        customer_id = data.get("customer_id", "")
+        lead_id = data.get("lead_id", "")
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        #
+        # Update Communications status
+        #
+
+        communication_sheet = get_communications_sheet()
+        communication_rows = communication_sheet.get_all_records()
+
+        for i, row in enumerate(communication_rows, start=2):
+
+            if str(row.get("lead_id", "")) == str(lead_id):
+
+                row["status"] = "Resolved"
+                row["replied_at"] = now
+                row["action_required"] = "No"
+
+                communication_sheet.update(
+                    f"A{i}:W{i}",
+                    [[
+                        row.get("conversation_id", ""),
+                        row.get("message_id", ""),
+                        row.get("customer_id", ""),
+                        row.get("lead_id", ""),
+                        row.get("company_name", ""),
+                        row.get("customer_name", ""),
+                        row.get("customer_email", ""),
+                        row.get("customer_phone", ""),
+                        row.get("sender", ""),
+                        row.get("message_type", ""),
+                        row.get("subject", ""),
+                        row.get("message", ""),
+                        row.get("attachment", ""),
+                        row.get("status", ""),
+                        row.get("priority", ""),
+                        row.get("assigned_to", ""),
+                        row.get("source", ""),
+                        row.get("created_at", ""),
+                        row.get("read_status", ""),
+                        row.get("replied_at", ""),
+                        row.get("action_required", ""),
+                        row.get("payment_status", ""),
+                        row.get("dataset_status", "")
+                    ]]
+                )
+
+        #
+        # Close CustomerAI conversation
+        #
+
+        ai_sheet = get_customer_ai_sheet()
+        ai_rows = ai_sheet.get_all_records()
+
+        for i, row in enumerate(ai_rows, start=2):
+
+            if str(row.get("customer_id", "")) == str(customer_id):
+
+                row["conversation_state"] = "Closed"
+                row["waiting_for"] = "Closed"
+                row["next_reply_after"] = ""
+
+                ai_sheet.update(
+                    f"A{i}:M{i}",
+                    [[
+                        row.get("customer_id", ""),
+                        row.get("enabled", ""),
+                        row.get("personality", ""),
+                        row.get("customer_role", ""),
+                        row.get("goal", ""),
+                        row.get("conversation_state", ""),
+                        row.get("waiting_for", ""),
+                        row.get("message_count", ""),
+                        row.get("last_ai_reply", ""),
+                        row.get("next_reply_after", ""),
+                        row.get("reply_probability", ""),
+                        row.get("max_messages", ""),
+                        row.get("memory_summary", "")
+                    ]]
+                )
+
+                break
+
+        return jsonify({
+            "status": "success",
+            "message": "Conversation resolved"
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
+
+@app.route("/create-support-task", methods=["POST"])
+@login_required
+def create_support_task():
+
+    try:
+        data = request.json
+
+        sheet = get_support_tasks_sheet()
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        task_id = "TASK" + datetime.now().strftime("%Y%m%d%H%M%S")
+
+        sheet.append_row([
+
+            task_id,
+            data.get("conversation_id", ""),
+            data.get("customer_id", ""),
+            data.get("lead_id", ""),
+            data.get("company_name", ""),
+            data.get("customer_name", ""),
+            data.get("customer_email", ""),
+            data.get("assigned_to", ""),
+            data.get("task_title", ""),
+            data.get("task_description", ""),
+            data.get("priority", "Medium"),
+            "Open",
+            session.get("username", "Admin"),
+            now,
+            data.get("due_date", ""),
+            "",
+            data.get("notes", "")
+
+        ])
+
+        return jsonify({
+            "status": "success",
+            "task_id": task_id
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
 # =====================================
 # LOGOUT
 # =====================================
