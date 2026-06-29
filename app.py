@@ -30,6 +30,8 @@ last_load = 0
 # ) == "true":
 
 
+scheduler = BackgroundScheduler()
+
 
 
 PLAN_CONFIG = {
@@ -70,9 +72,9 @@ SCOPES = [
 
 creds = Credentials.from_service_account_file(
 
-    "credentials.json",
+    # "credentials.json",
 
-    # "/etc/secrets/credentials.json",
+    "/etc/secrets/credentials.json",
 
     scopes=SCOPES
 
@@ -93,9 +95,8 @@ def get_support_tasks_sheet():
 
 #logic for lead core logic 
 
-if __name__ == "__main__":
-    
-    def process_leads():
+     
+def process_leads():
 
         try:
 
@@ -340,7 +341,7 @@ if __name__ == "__main__":
                 e
             )
 
-    def process_customer_renewals():
+def process_customer_renewals():
 
         try:
 
@@ -526,36 +527,6 @@ if __name__ == "__main__":
                 e
             )
 
-
-    scheduler = BackgroundScheduler()
-
-    scheduler.add_job(
-            check_new_tickets,
-            "interval",
-            hours=8
-        )
-
-    scheduler.add_job(
-            process_leads,
-            "interval",
-            hours= 1
-            # seconds=30
-
-        )
-
-    scheduler.add_job(
-            process_customer_renewals,
-            "interval",
-            hours= 4
-
-        )
-
-    scheduler.start()
-
-    print(
-        "Notification Scheduler Started"
-    )
-
 def get_customer_ai_sheet():
 
     spreadsheet = gc.open_by_key(
@@ -591,11 +562,45 @@ customer_ai.initialize(
 )
 
 scheduler.add_job(
+    check_new_tickets,
+    "interval",
+    hours=8,
+    id="check_new_tickets",
+    replace_existing=True
+)
+
+scheduler.add_job(
+    process_leads,
+    "interval",
+    hours=1,
+    id="process_leads",
+    replace_existing=True
+)
+
+scheduler.add_job(
+    process_customer_renewals,
+    "interval",
+    hours=4,
+    id="process_customer_renewals",
+    replace_existing=True
+)
+
+scheduler.add_job(
     customer_ai.process_customer_ai,
     "interval",
-     minutes=1,
-    id="customer_ai"
+    minutes=3,
+    id="customer_ai",
+    replace_existing=True
 )
+
+
+if not scheduler.running:
+    scheduler.start()
+    print("Scheduler Started")
+
+
+
+
 
 all_data = []
 
@@ -3173,13 +3178,7 @@ def open_browser():
 # =====================================
 # RUN
 # =====================================
-
 if __name__ == "__main__":
-
-    Timer(
-        1,
-        open_browser
-    ).start()
 
     app.run(
         host="127.0.0.1",
