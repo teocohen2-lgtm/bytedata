@@ -25,16 +25,16 @@ def initialize(ai_sheet_func, onboarding_sheet_func, communications_sheet_func):
     get_communications_sheet_func = communications_sheet_func
 
 
+def get_customer_ai_sheet():
+    return get_customer_ai_sheet_func()
+
+
 def get_onboarding_sheet():
     return get_onboarding_sheet_func()
 
 
 def get_communications_sheet():
     return get_communications_sheet_func()
-
-
-def get_customer_ai_sheet():
-    return get_customer_ai_sheet_func()
 
 
 def generate_customer_reply(
