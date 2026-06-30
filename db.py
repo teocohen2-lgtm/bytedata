@@ -398,3 +398,39 @@ def get_next_numeric_id(table, id_column="id"):
     last_id = row[0] if row and row[0] is not None else 0
 
     return int(last_id) + 1
+
+
+def bulk_insert(table, rows):
+
+    safe_table(table)
+
+    if not rows:
+        return 0
+
+    columns = TABLE_COLUMNS[table]
+
+    placeholders = ",".join(["?"] * len(columns))
+
+    sql = f"""
+        INSERT OR IGNORE INTO {table}
+        ({",".join(columns)})
+        VALUES ({placeholders})
+    """
+
+    values = []
+
+    for data in rows:
+        values.append([
+            str(data.get(col, ""))
+            for col in columns
+        ])
+
+    conn = get_conn()
+
+    conn.executemany(sql, values)
+
+    conn.commit()
+
+    conn.close()
+
+    return len(rows)

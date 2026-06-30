@@ -38,7 +38,8 @@ from db import (
     DATA_OPERATIONS_COLUMNS,
     get_next_numeric_id,
     select,
-    select_one
+    select_one,
+    bulk_insert
 )
 
 
@@ -99,9 +100,9 @@ SCOPES = [
 
 creds = Credentials.from_service_account_file(
 
-    # "credentials.json",
+    "credentials.json",
 
-    "/etc/secrets/credentials.json",
+    # "/etc/secrets/credentials.json",
 
     scopes=SCOPES
 
@@ -3082,6 +3083,10 @@ def import_data_file():
 
         imported = 0
 
+        bulk_rows = []
+
+        start_id = next_id
+
         for _, row in df.iterrows():
 
             data = {}
@@ -3089,36 +3094,32 @@ def import_data_file():
             for col in DATA_OPERATIONS_COLUMNS:
 
                 if col == "id":
-
                     data[col] = str(next_id)
 
-                # elif col == "assign":
-
-                #     data[col] = ""
+                elif col == "assign":
+                    data[col] = ""
 
                 elif col == "verified":
-
-                    data[col] = "secured"
+                    data[col] = "No"
 
                 else:
+                    data[col] = str(row.get(col, "")).strip()
 
-                    data[col] = str(
-                        row.get(col, "")
-                    ).strip()
+            bulk_rows.append(data)
 
-            insert(
-                "data_operations",
-                data
-            )
-
-            imported += 1
             next_id += 1
+
+        imported = bulk_insert(
+            "data_operations",
+            bulk_rows
+)
 
         return jsonify({
 
-            "status": "success",
-
-            "rows_imported": imported
+               "status": "success",
+                "rows_imported": imported,
+                "starting_id": start_id,
+                 "ending_id": next_id - 1
 
         })
 
