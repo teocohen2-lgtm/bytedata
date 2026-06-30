@@ -1,9 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
 .env
 credentials.json
 .credentials.json
-bytedata.db
-*.db
+
+# Uploads
 uploads/
-__pycache__/
-*.pyc
+
+# Logs
 *.log
