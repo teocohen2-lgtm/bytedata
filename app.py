@@ -580,7 +580,7 @@ scheduler.add_job(
 scheduler.add_job(
     process_customer_renewals,
     "interval",
-    minutes=5,
+    hours=24,
     id="process_customer_renewals",
     replace_existing=True,
     next_run_time=datetime.now()
@@ -589,7 +589,7 @@ scheduler.add_job(
 scheduler.add_job(
     customer_ai.process_customer_ai,
     "interval",
-    seconds=30,
+    minutes=10,
     id="customer_ai",
     replace_existing=True
 )
