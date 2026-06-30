@@ -6,10 +6,23 @@ import pandas as pd
 import os
 
 # GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
 client = genai.Client(
     api_key=GEMINI_API_KEY
 )
+
+get_customer_ai_sheet_func = None
+get_onboarding_sheet_func = None
+get_communications_sheet_func = None
+
+
+def initialize(ai_sheet_func, onboarding_sheet_func, communications_sheet_func):
+    global get_customer_ai_sheet_func
+    global get_onboarding_sheet_func
+    global get_communications_sheet_func
+
+    get_customer_ai_sheet_func = ai_sheet_func
+    get_onboarding_sheet_func = onboarding_sheet_func
+    get_communications_sheet_func = communications_sheet_func
 
 
 def get_customer_ai_sheet():
@@ -664,14 +677,14 @@ def process_customer_ai():
         print("CUSTOMER AI ERROR:", str(e))
 
 
-def initialize(ai_sheet_func,
-               onboarding_func,
-               communication_func):
+# def initialize(ai_sheet_func,
+#                onboarding_func,
+#                communication_func):
 
-    global get_customer_ai_sheet_func
-    global get_onboarding_sheet
-    global get_communications_sheet
+#     global get_customer_ai_sheet_func
+#     global get_onboarding_sheet
+#     global get_communications_sheet
 
-    get_customer_ai_sheet_func = ai_sheet_func
-    get_onboarding_sheet = onboarding_func
-    get_communications_sheet = communication_func
+#     get_customer_ai_sheet_func = ai_sheet_func
+#     get_onboarding_sheet = onboarding_func
+#     get_communications_sheet = communication_func

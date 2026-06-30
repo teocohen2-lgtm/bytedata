@@ -578,6 +578,57 @@
       .json-number {
         color: #f59e0b;
       } /* Orange/Gold for Numbers */
+
+      .import-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 99999;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+      }
+
+      .import-window {
+        width: 480px;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+      }
+
+      .import-window h2 {
+        margin-bottom: 16px;
+      }
+
+      .import-file-input {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        color: var(--text-main);
+      }
+
+      .import-result-success {
+        margin-top: 15px;
+        padding: 14px;
+        border-radius: 10px;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: var(--accent-green);
+      }
+
+      .import-result-error {
+        margin-top: 15px;
+        padding: 14px;
+        border-radius: 10px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: var(--accent-red);
+      }
     </style>
   </head>
   <body>
@@ -698,6 +749,17 @@
               <p>View and manage database</p>
             </div>
           </button>
+          {% if username == "bytedata" %}
+          <button class="footer-card-btn" onclick="openImportModal()">
+            <div class="footer-icon" style="color: #a855f7">
+              <i class="fa-solid fa-file-import"></i>
+            </div>
+            <div class="footer-card-text">
+              <h4 style="color: #a855f7">import Data</h4>
+              <p>Import data in database</p>
+            </div>
+          </button>
+          {% endif %}
         </div>
       </div>
     </main>
@@ -1092,6 +1154,109 @@ SELECT * FROM data LIMIT 20;</textarea
         });
         html += "</tbody></table>";
         document.getElementById("queryResults").innerHTML = html;
+      }
+    </script>
+    <div id="importModal" class="import-modal">
+      <div class="import-window">
+        <h2><i class="fa-solid fa-file-import"></i> Import Dataset</h2>
+
+        <input
+          type="file"
+          id="importFile"
+          class="import-file-input"
+          accept=".csv,.xlsx,.xls"
+        />
+
+        <div
+          id="selectedFile"
+          style="margin-top: 12px; color: var(--text-muted); font-size: 13px"
+        ></div>
+        <div id="importResult"></div>
+
+        <div style="display: flex; gap: 12px; margin-top: 20px">
+          <button
+            class="btn btn-primary"
+            id="importBtn"
+            onclick="startImport()"
+          >
+            <i class="fa-solid fa-file-import"></i> Import
+          </button>
+
+          <button class="btn" onclick="closeImportModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openImportModal() {
+        document.getElementById("importModal").style.display = "flex";
+        document.getElementById("importFile").value = "";
+        document.getElementById("selectedFile").innerHTML = "";
+        document.getElementById("importResult").innerHTML = "";
+        document.getElementById("importBtn").disabled = false;
+        document.getElementById(
+          "importBtn"
+        ).innerHTML = `<i class="fa-solid fa-file-import"></i> Import`;
+      }
+
+      function closeImportModal() {
+        document.getElementById("importModal").style.display = "none";
+      }
+
+      document
+        .getElementById("importFile")
+        .addEventListener("change", function () {
+          if (this.files.length) {
+            document.getElementById("selectedFile").innerHTML = `Selected: <b>${
+              this.files[0].name
+            }</b> (${(this.files[0].size / 1024 / 1024).toFixed(2)} MB)`;
+          }
+        });
+
+      async function startImport() {
+        const file = document.getElementById("importFile").files[0];
+
+        if (!file) {
+          alert("Select file first.");
+          return;
+        }
+
+        const btn = document.getElementById("importBtn");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Importing...`;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const res = await fetch("/import-data-file", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await res.json();
+
+          if (result.status === "success") {
+            document.getElementById("importResult").innerHTML = `
+            <div class="import-result-success">
+              ✅ Import Complete<br><br>
+              Rows Imported: <b>${result.rows_imported}</b>
+            </div>
+          `;
+          } else {
+            document.getElementById("importResult").innerHTML = `
+            <div class="import-result-error">${result.message}</div>
+          `;
+            btn.disabled = false;
+          }
+        } catch (err) {
+          document.getElementById("importResult").innerHTML = `
+          <div class="import-result-error">${err}</div>
+        `;
+          btn.disabled = false;
+        }
+
+        btn.innerHTML = `<i class="fa-solid fa-file-import"></i> Import`;
       }
     </script>
   </body>

@@ -1,4 +1,9 @@
-credentials.json
-.envcredentials.json
-env
 .env
+credentials.json
+.credentials.json
+bytedata.db
+*.db
+uploads/
+__pycache__/
+*.pyc
+*.log

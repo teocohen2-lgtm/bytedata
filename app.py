@@ -15,12 +15,39 @@ from datetime import datetime , timedelta
 import random
 from customer_ai import process_customer_ai
 import customer_ai
+from werkzeug.utils import secure_filename
+from db import (
+    init_db,
+    get_all,
+    insert_row,
+    delete_by_lead_id,
+    find_by_lead_id,
+    find_by_customer_id,
+    update_by_customer_id,
+    count_rows,
+    ONBOARDING_COLUMNS,
+    PAYMENT_FOLLOW_UP_COLUMNS,
+    delete_by_customer_id,
+    SUPPORT_TASKS_COLUMNS,
+    COMMUNICATIONS_COLUMNS,
+    insert,
+    update,
+    find_by_lead_id_all,
+    update_communications_by_lead_id,
+    mark_messages_read_by_lead_id,
+    DATA_OPERATIONS_COLUMNS,
+    get_next_numeric_id,
+    select,
+    select_one
+)
 
 
 
 
  
 app = Flask(__name__)
+
+init_db()
 
 cached_df = None
 last_load = 0
@@ -72,9 +99,9 @@ SCOPES = [
 
 creds = Credentials.from_service_account_file(
 
-    "credentials.json",
+    # "credentials.json",
 
-    # "/etc/secrets/credentials.json",
+    "/etc/secrets/credentials.json",
 
     scopes=SCOPES
 
@@ -98,434 +125,268 @@ def get_support_tasks_sheet():
      
 def process_leads():
 
-        try:
+    try:
 
-            print("PROCESSING LEADS...")
+        print("PROCESSING LEADS...")
 
-            spreadsheet = gc.open_by_key(
-                "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+        spreadsheet = gc.open_by_key(
+            "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
+        )
+
+        leads_sheet = spreadsheet.worksheet("Leads")
+
+        leads = leads_sheet.get_all_records()
+
+        for lead in leads:
+
+            processed = str(
+                lead.get("scheduler_processed", "")
+            ).strip().lower()
+
+            status = str(
+                lead.get("lead_status", "")
+            ).strip().lower()
+
+            if processed == "yes" or status != "new":
+                continue
+
+            random_number = random.randint(1, 100)
+
+            lead_id = str(lead.get("lead_id", ""))
+
+            company_name = lead.get("company_name", "")
+            contact_person = lead.get("contact_person", "")
+            email = lead.get("email", "")
+            phone = lead.get("phone", "")
+            country = lead.get("country", "")
+
+            plan = str(
+                lead.get("plan_interested", "starter")
+            ).lower()
+
+            plan_data = PLAN_CONFIG.get(
+                plan,
+                PLAN_CONFIG["starter"]
             )
 
-            leads_sheet = spreadsheet.worksheet("Leads")
+            if random_number <= 70:
 
-            followup_sheet = spreadsheet.worksheet("Payment_Follow_Up")
-
-            onboarding_sheet = spreadsheet.worksheet("Onboarding")
-
-            leads = leads_sheet.get_all_records()
-
-            for lead in leads:
-
-                processed = str(
-                    lead.get(
-                        "scheduler_processed",
-                        ""
-                    )
-                ).strip().lower()
-
-                status = str(
-                    lead.get(
-                        "lead_status",
-                        ""
-                    )
-                ).strip().lower()
-
-                if (
-                    processed == "yes"
-                    or status != "new"
-                ):
-                    continue
-
-                random_number = random.randint(
-                    1,
-                    100
-                )
-
-                lead_id = str(
-                    lead.get(
-                        "lead_id"
-                    )
-                )
-
-                company_name = lead.get(
-                    "company_name",
-                    ""
-                )
-
-                contact_person = lead.get(
-                    "contact_person",
-                    ""
-                )
-
-                email = lead.get(
-                    "email",
-                    ""
-                )
-
-                phone = lead.get(
-                    "phone",
-                    ""
-                )
-
-                country = lead.get(
-                    "country",
-                    ""
-                )
-
-                plan = str(
-                    lead.get(
-                        "plan_interested",
-                        "starter"
-                    )
-                ).lower()
-
-                plan_data = PLAN_CONFIG.get(
-                    plan,
-                    PLAN_CONFIG["starter"]
-                )
-
-                if random_number <= 70:
-
-                    followup_sheet.append_row([
-
-                        lead_id,
-                        company_name,
-                        contact_person,
-                        email,
-                        phone,
-                        plan,
-                        f"PAY-{lead_id}",
-                        f"https://pay.bytedata.app/{lead_id}",
-                        "Pending",
-                        1,
-                        "admin",
-                        datetime.now().strftime(
-                            "%Y-%m-%d"
-                        ),
-                        random.choice([
+                insert_row(
+                    "payment_follow_up",
+                    PAYMENT_FOLLOW_UP_COLUMNS,
+                    {
+                        "lead_id": lead_id,
+                        "company_name": company_name,
+                        "contact_person": contact_person,
+                        "email": email,
+                        "phone": phone,
+                        "plan_interested": plan,
+                        "payment_referer": f"PAY-{lead_id}",
+                        "payment_link": f"https://pay.bytedata.app/{lead_id}",
+                        "payment_status": "Pending",
+                        "attempt_count": "1",
+                        "assigned_to": "admin",
+                        "last_contact_date": datetime.now().strftime("%Y-%m-%d"),
+                        "issue_type": random.choice([
                             "Card Declined",
                             "Payment Pending",
                             "Customer Not Responding",
                             "Payment Link Expired"
                         ]),
-                        "Auto generated by scheduler",
-                        datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        )
-
-                    ])
-
-                    new_status = "Payment Pending"
-
-                else:
-
-                    payment_date = datetime.now()
-
-                    expiry_date = payment_date + timedelta(
-                        days=
-                        plan_data["months"] * 30
-                    )
-
-                    customer_id = (
-                        "CUST" +
-                        str(
-                            len(
-                                onboarding_sheet.get_all_records()
-                            ) + 1
-                        ).zfill(3)
-                    )
-
-                    onboarding_sheet.append_row([
-
-                        customer_id,
-                        company_name,
-                        contact_person,
-                        email,
-                        phone,
-                        country,
-                        plan.title(),
-                        plan_data["price"],
-                        "USD",
-                        "Active",
-                        expiry_date.strftime(
-                            "%Y-%m-%d"
-                        ),
-                        0,
-                        f"https://pay.bytedata.app/{customer_id}",
-                        "",
-                        "Auto onboarded by scheduler",
-                        "Lead converted successfully",
-                        "admin",
-                        payment_date.strftime(
-                            "%Y-%m-%d"
-                        ),
-                        expiry_date.strftime(
-                            "%Y-%m-%d"
-                        ),
-                        (
-                            expiry_date -
-                            payment_date
-                        ).days,
-                        plan_data["months"],
-                        "Active",
-                        plan_data["price"],
-                        "Paid",
-                        "Sent",
-                        payment_date.strftime(
-                            "%Y-%m-%d"
-                        ),
-                        payment_date.strftime(
-                            "%Y-%m-%d"
-                        ),
-                       "Completed",
-                        payment_date.strftime(
-                            "%Y-%m-%d"
-                        ),      
-                        f"PAY-{customer_id}",
-                        lead_id,
-                        datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        )
-
-                    ])
-
-                    new_status = "Paid"
-
-                all_rows = leads_sheet.get_all_values()
-
-                headers = all_rows[0]
-
-                scheduler_col = (
-                    headers.index(
-                        "scheduler_processed"
-                    ) + 1
+                        "notes": "Auto generated by scheduler",
+                        "created_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
                 )
 
-                status_col = (
-                    headers.index(
-                        "lead_status"
-                    ) + 1
+                new_status = "Payment Pending"
+
+            else:
+
+                payment_date = datetime.now()
+
+                expiry_date = payment_date + timedelta(
+                    days=plan_data["months"] * 30
                 )
 
-                for row_num, row in enumerate(
-                    all_rows[1:],
-                    start=2
-                ):
-
-                    if str(
-                        row[0]
-                    ).strip() == lead_id:
-
-                        leads_sheet.update_cell(
-                            row_num,
-                            scheduler_col,
-                            "Yes"
-                        )
-
-                        leads_sheet.update_cell(
-                            row_num,
-                            status_col,
-                            new_status
-                        )
-
-                        break
-
-                print(
-                    f"{lead_id} -> {new_status}"
+                customer_id = (
+                    "CUST" +
+                    str(count_rows("onboarding") + 1).zfill(3)
                 )
 
-        except Exception as e:
-
-            print(
-                "LEAD PROCESS ERROR:",
-                e
-            )
-
-def process_customer_renewals():
-
-        try:
-
-            print("CHECKING CUSTOMER RENEWALS...")
-
-            spreadsheet = gc.open_by_key(
-                "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
-            )
-
-            onboarding_sheet = spreadsheet.worksheet("Onboarding")
-
-            followup_sheet = spreadsheet.worksheet("Payment_Follow_Up")
-
-            records = onboarding_sheet.get_all_records()
-
-            headers = onboarding_sheet.row_values(1)
-
-            status_col = headers.index("status") + 1
-
-            days_remaining_col = headers.index("days_remaining") + 1
-
-            days_overdue_col = headers.index("days_overdue") + 1
-
-            renewal_col = headers.index(
-                "renewal_followup_created"
-            ) + 1
-
-            today = datetime.now().date()
-
-            for index, row in enumerate(
-                records,
-                start=2
-            ):
-
-                expiry_date = str(
-                    row.get(
-                        "expiry_date",
-                        ""
-                    )
-                ).strip()
-
-                if not expiry_date:
-
-                    continue
-
-                expiry = datetime.strptime(
-                    expiry_date,
-                    "%Y-%m-%d"
-                ).date()
-
-                days_remaining = (
-                    expiry - today
-                ).days
-
-                onboarding_sheet.update_cell(
-                    index,
-                    days_remaining_col,
-                    days_remaining
+                insert_row(
+                    "onboarding",
+                    ONBOARDING_COLUMNS,
+                    {
+                        "customer_id": customer_id,
+                        "company_name": company_name,
+                        "contact_person": contact_person,
+                        "email": email,
+                        "phone": phone,
+                        "country": country,
+                        "subscription_plan": plan.title(),
+                        "subscription_amount": plan_data["price"],
+                        "currency": "USD",
+                        "status": "Active",
+                        "next_payment_date": expiry_date.strftime("%Y-%m-%d"),
+                        "days_overdue": "0",
+                        "payment_link": f"https://pay.bytedata.app/{customer_id}",
+                        "last_contact_date": "",
+                        "last_message": "Auto onboarded by scheduler",
+                        "notes": "Lead converted successfully",
+                        "assigned_to": "admin",
+                        "payment_date": payment_date.strftime("%Y-%m-%d"),
+                        "expiry_date": expiry_date.strftime("%Y-%m-%d"),
+                        "days_remaining": str((expiry_date - payment_date).days),
+                        "subscription_duration": str(plan_data["months"]),
+                        "auto_status": "Active",
+                        "renewal_amount": str(plan_data["price"]),
+                        "payment_stage": "Paid",
+                        "payment_link_status": "Sent",
+                        "payment_sent_date": payment_date.strftime("%Y-%m-%d"),
+                        "payment_received_date": payment_date.strftime("%Y-%m-%d"),
+                        "migration_status": "Completed",
+                        "migration_date": payment_date.strftime("%Y-%m-%d"),
+                        "payment_reference": f"PAY-{customer_id}",
+                        "lead_id": lead_id,
+                        "created_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "renewal_followup_created": "No",
+                        "last_renewal_date": ""
+                    }
                 )
 
-                if days_remaining < 0:
+                new_status = "Paid"
 
-                    onboarding_sheet.update_cell(
-                        index,
-                        days_overdue_col,
-                        abs(days_remaining)
-                    )
+            all_rows = leads_sheet.get_all_values()
 
-                    renewal_created = str(
-                    row.get(
-                        "renewal_followup_created",
-                        ""
-                    )
-                ).strip().lower()
+            headers = all_rows[0]
 
-                    if renewal_created != "yes":
+            scheduler_col = headers.index("scheduler_processed") + 1
+            status_col = headers.index("lead_status") + 1
 
-                        renewal_lead_id = (
-                            "RENEW-" +
-                            str(
-                                row.get(
-                                    "customer_id",
-                                    ""
-                                )
-                            )
-                        )
+            for row_num, row in enumerate(all_rows[1:], start=2):
 
-                        followup_sheet.append_row([
+                if str(row[0]).strip() == lead_id:
 
-                            renewal_lead_id,
-                            row.get(
-                                "company_name",
-                                ""
-                            ),
-                            row.get(
-                                "contact_person",
-                                ""
-                            ),
-                            row.get(
-                                "email",
-                                ""
-                            ),
-                            row.get(
-                                "phone",
-                                ""
-                            ),
-                            row.get(
-                                "subscription_plan",
-                                ""
-                            ),
-                            "RENEWAL",
-                            row.get(
-                                "payment_link",
-                                ""
-                            ),
-                            "Pending",
-                            1,
-                            row.get(
-                                "assigned_to",
-                                "admin"
-                            ),
-                            datetime.now().strftime(
-                                "%Y-%m-%d"
-                            ),
-                            "Renewal Due",
-                            "Auto renewal follow up",
-                            datetime.now().strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-
-                        ])
-
-                    onboarding_sheet.update_cell(
-                        index,
-                        renewal_col,
+                    leads_sheet.update_cell(
+                        row_num,
+                        scheduler_col,
                         "Yes"
                     )
 
-                    # print(
-                    #     f"Renewal Created: {renewal_lead_id}"
-                    # )
-
-                    
-
-                    onboarding_sheet.update_cell(
-                        index,
+                    leads_sheet.update_cell(
+                        row_num,
                         status_col,
-                        "Overdue"
+                        new_status
                     )
 
-                elif days_remaining <= 7:
+                    break
 
-                    onboarding_sheet.update_cell(
-                        index,
-                        days_overdue_col,
-                        0
+            print(f"{lead_id} -> {new_status}")
+
+    except Exception as e:
+
+        print("LEAD PROCESS ERROR:", e)
+
+def process_customer_renewals():
+
+    try:
+
+        print("CHECKING CUSTOMER RENEWALS...")
+
+        records = get_all("onboarding")
+
+        today = datetime.now().date()
+
+        for row in records:
+
+            customer_id = str(row.get("customer_id", "")).strip()
+
+            expiry_date = str(row.get("expiry_date", "")).strip()
+
+            if not customer_id or not expiry_date:
+                continue
+
+            expiry = datetime.strptime(
+                expiry_date,
+                "%Y-%m-%d"
+            ).date()
+
+            days_remaining = (expiry - today).days
+
+            updates = {
+                "days_remaining": str(days_remaining)
+            }
+
+            if days_remaining < 0:
+
+                updates["days_overdue"] = str(abs(days_remaining))
+                updates["status"] = "Overdue"
+                updates["auto_status"] = "Overdue"
+
+                renewal_created = str(
+                    row.get("renewal_followup_created", "")
+                ).strip().lower()
+
+                if renewal_created != "yes":
+
+                    renewal_lead_id = "RENEW-" + customer_id
+
+                    existing_followup = find_by_lead_id(
+                        "payment_follow_up",
+                        renewal_lead_id
                     )
 
-                    onboarding_sheet.update_cell(
-                        index,
-                        status_col,
-                        "Due Soon"
-                    )
+                    if not existing_followup:
 
-                else:
+                        insert_row(
+                            "payment_follow_up",
+                            PAYMENT_FOLLOW_UP_COLUMNS,
+                            {
+                                "lead_id": renewal_lead_id,
+                                "company_name": row.get("company_name", ""),
+                                "contact_person": row.get("contact_person", ""),
+                                "email": row.get("email", ""),
+                                "phone": row.get("phone", ""),
+                                "plan_interested": row.get("subscription_plan", ""),
+                                "payment_referer": "RENEWAL",
+                                "payment_link": row.get("payment_link", ""),
+                                "payment_status": "Pending",
+                                "attempt_count": "1",
+                                "assigned_to": row.get("assigned_to", "admin"),
+                                "last_contact_date": datetime.now().strftime("%Y-%m-%d"),
+                                "issue_type": "Renewal Due",
+                                "notes": "Auto renewal follow up",
+                                "created_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            }
+                        )
 
-                    onboarding_sheet.update_cell(
-                        index,
-                        days_overdue_col,
-                        0
-                    )
+                    updates["renewal_followup_created"] = "Yes"
 
-                    onboarding_sheet.update_cell(
-                        index,
-                        status_col,
-                        "Active"
-                    )
+            elif days_remaining <= 7:
 
-        except Exception as e:
+                updates["days_overdue"] = "0"
+                updates["status"] = "Due Soon"
+                updates["auto_status"] = "Due Soon"
 
-            print(
-                "RENEWAL ERROR:",
-                e
+            else:
+
+                updates["days_overdue"] = "0"
+                updates["status"] = "Active"
+                updates["auto_status"] = "Active"
+
+            update_by_customer_id(
+                "onboarding",
+                customer_id,
+                updates
             )
+
+        print("CUSTOMER RENEWAL CHECK FINISHED")
+
+    except Exception as e:
+
+        print("RENEWAL ERROR:", e)
+
+
 
 def get_customer_ai_sheet():
 
@@ -537,23 +398,32 @@ def get_customer_ai_sheet():
 
 def get_onboarding_sheet():
 
-    spreadsheet = gc.open_by_key(
-        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
-    )
+    class SQLiteOnboardingSheet:
 
-    return spreadsheet.worksheet(
-        "Onboarding"
-    )
+        def get_all_records(self):
+            return get_all("onboarding")
+
+    return SQLiteOnboardingSheet()
 
 def get_communications_sheet():
 
-    spreadsheet = gc.open_by_key(
-        "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
-    )
+    class SQLiteCommunicationsSheet:
 
-    return spreadsheet.worksheet(
-        "Communications"
-    )
+        def get_all_records(self):
+            return get_all("communications")
+
+        def append_row(self, values):
+            data = {}
+
+            for index, col in enumerate(COMMUNICATIONS_COLUMNS):
+                data[col] = values[index] if index < len(values) else ""
+
+            insert(
+                "communications",
+                data
+            )
+
+    return SQLiteCommunicationsSheet()
 
 customer_ai.initialize(
     get_customer_ai_sheet,
@@ -580,7 +450,7 @@ scheduler.add_job(
 scheduler.add_job(
     process_customer_renewals,
     "interval",
-    hours=24,
+    hours=6,
     id="process_customer_renewals",
     replace_existing=True,
     next_run_time=datetime.now()
@@ -865,7 +735,9 @@ def home():
 
     return render_template(
         "indexv2.html",
-        role=session.get("role")
+        role=session.get("role"),
+        username=session.get("username")
+
 
     )
 
@@ -905,8 +777,7 @@ def operations():
     
     return render_template(
         "operationsv2.html",
-        role=session.get("role")
-    )
+        role=session.get("role")    )
 
 @app.route("/operations-data")
 @login_required
@@ -914,9 +785,11 @@ def operations_data():
 
     try:
 
-        sheet = get_followup_sheet()
+        # sheet = get_followup_sheet()
 
-        records = sheet.get_all_records()
+        # records = sheet.get_all_records()
+
+        records = get_all("payment_follow_up")
 
         df = pd.DataFrame(records)
 
@@ -1035,72 +908,36 @@ def operations_data():
 @login_required
 def mark_paid():
 
-    
     try:
-     
 
         lead_id = str(
-            request.json.get(
-                "lead_id"
-            )
-        )
+            request.json.get("lead_id", "")
+        ).strip()
 
-        is_renewal = lead_id.startswith(
-                "RENEW-"
-        )
+        if not lead_id:
+
+            return jsonify({
+                "status": "error",
+                "message": "Missing lead_id"
+            })
+
+        is_renewal = lead_id.startswith("RENEW-")
 
         spreadsheet = gc.open_by_key(
             "1CeJ8hxjkKly6Ef5hW1spb5E37F7ANKPp-Bsud5x8hpM"
         )
 
         leads_sheet = spreadsheet.worksheet("Leads")
-
         leads = leads_sheet.get_all_records()
 
-        country = ""
-
-        for lead in leads:
-
-                if str(lead.get("lead_id")) == lead_id:
-
-                    country = lead.get(
-                        "country",
-                        ""
-                    )
-
-                    break    
-
-
-        followup_sheet = spreadsheet.worksheet("Payment_Follow_Up")
-
-        onboarding_sheet = spreadsheet.worksheet("Onboarding")
-
-        followups = followup_sheet.get_all_records()
-
-        all_rows = followup_sheet.get_all_values()
-
-        delete_row = None
-
-        for row_num, row in enumerate(
-            all_rows[1:],
-            start=2
-        ):
-
-            if str(
-                row[0]
-            ).strip() == lead_id:
-
-                delete_row = row_num
-
-                break
+        followups = get_all("payment_follow_up")
+        onboarding = get_all("onboarding")
 
         target = None
 
         for row in followups:
 
-            if str(
-                row.get("lead_id")
-            ) == lead_id:
+            if str(row.get("lead_id", "")).strip() == lead_id:
 
                 target = row
                 break
@@ -1108,299 +945,167 @@ def mark_paid():
         if not target:
 
             return jsonify({
-                "status":"error",
-                "message":"Lead not found"
+                "status": "error",
+                "message": "Lead not found in payment follow up"
             })
-        
+
+        country = ""
+
+        original_lead_id = lead_id
+
         if is_renewal:
 
-            customer_id = lead_id.replace(
-                "RENEW-",
-                ""
+            original_lead_id = ""
+
+        for lead in leads:
+
+            if str(lead.get("lead_id", "")).strip() == original_lead_id:
+
+                country = lead.get("country", "")
+                break
+
+        payment_date = datetime.now()
+
+        if is_renewal:
+
+            customer_id = lead_id.replace("RENEW-", "")
+
+            customer = find_by_customer_id(
+                "onboarding",
+                customer_id
             )
 
-            onboarding_rows = (
-                onboarding_sheet.get_all_records()
+            if not customer:
+
+                return jsonify({
+                    "status": "error",
+                    "message": "Renewal customer not found in onboarding"
+                })
+
+            plan = str(
+                customer.get("subscription_plan", "starter")
+            ).lower()
+
+            plan_data = PLAN_CONFIG.get(
+                plan,
+                PLAN_CONFIG["starter"]
             )
 
-            headers = [
-                str(x).strip().lower()
-                for x in onboarding_sheet.row_values(1)
-            ]
+            expiry_date = payment_date + timedelta(
+                days=plan_data["months"] * 30
+            )
 
-            for row_num, row in enumerate(
-                onboarding_rows,
-                start=2
-            ):
+            update_by_customer_id(
+                "onboarding",
+                customer_id,
+                {
+                    "payment_date": payment_date.strftime("%Y-%m-%d"),
+                    "expiry_date": expiry_date.strftime("%Y-%m-%d"),
+                    "next_payment_date": expiry_date.strftime("%Y-%m-%d"),
+                    "status": "Active",
+                    "auto_status": "Active",
+                    "days_remaining": str((expiry_date - payment_date).days),
+                    "days_overdue": "0",
+                    "renewal_followup_created": "No",
+                    "last_renewal_date": payment_date.strftime("%Y-%m-%d"),
+                    "payment_reference": target.get("payment_reference", ""),
+                    "payment_stage": "Paid",
+                    "payment_received_date": payment_date.strftime("%Y-%m-%d")
+                }
+            )
 
-                if str(
-                    row.get(
-                        "customer_id",
-                        ""
-                    )
-                ) == customer_id:
+            delete_by_lead_id(
+                "payment_follow_up",
+                lead_id
+            )
 
-                    plan = str(
-                        row.get(
-                            "subscription_plan",
-                            "starter"
-                        )
-                    ).lower()
+            return jsonify({
+                "status": "success"
+            })
 
-                    PLAN_CONFIG = {
+        for customer in onboarding:
 
-                        "starter":{
-                            "price":49,
-                            "months":1
-                        },
+            if str(customer.get("lead_id", "")).strip() == lead_id:
 
-                        "premium":{
-                            "price":149,
-                            "months":3
-                        },
-
-                        "business":{
-                            "price":299,
-                            "months":6
-                        },
-
-                        "enterprise":{
-                            "price":599,
-                            "months":12
-                        }
-
-                    }
-
-                    plan_data = PLAN_CONFIG.get(
-                        plan,
-                        PLAN_CONFIG["starter"]
-                    )
-
-                    payment_date = datetime.now()
-
-                    expiry_date = payment_date + timedelta(
-                        days=
-                        plan_data["months"] * 30
-                    )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index("payment_date")+1,
-                        payment_date.strftime(
-                            "%Y-%m-%d"
-                        )
-                    )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index("expiry_date")+1,
-                        expiry_date.strftime(
-                            "%Y-%m-%d"
-                        )
-                    )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index("status")+1,
-                        "Active"
-                    )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index("days_remaining")+1,
-                        (
-                            expiry_date-payment_date
-                        ).days
-                    )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index("days_overdue")+1,
-                        0
-                    )
-#                     print(
-#     "SETTING renewal_followup_created TO No"
-# )
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index(
-                            "renewal_followup_created"
-                        )+1,
-                        "No"
-                    )
-#                     print(
-#     "renewal_followup_created UPDATED"
-# )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index(
-                            "last_renewal_date"
-                        )+1,
-                        payment_date.strftime(
-                            "%Y-%m-%d"
-                        )
-                    )
-
-                    onboarding_sheet.update_cell(
-                        row_num,
-                        headers.index(
-                            "payment_reference"
-                        )+1,
-                        target.get(
-                            "payment_reference",
-                            ""
-                        )
-                    )
-
-            
-
-                    if delete_row:
-
-                        followup_sheet.delete_rows(
-                            delete_row
-                        )
-
-                    return jsonify({
-
-                        "status":"success"
-
-                    })
+                return jsonify({
+                    "status": "error",
+                    "message": "Lead already onboarded"
+                })
 
         plan = str(
-            target.get(
-                "plan_interested",
-                "starter"
-            )
+            target.get("plan_interested", "starter")
         ).lower()
-
-        PLAN_CONFIG = {
-
-            "starter":{
-                "price":49,
-                "months":1
-            },
-
-            "premium":{
-                "price":149,
-                "months":3
-            },
-
-            "business":{
-                "price":299,
-                "months":6
-            },
-
-            "enterprise":{
-                "price":599,
-                "months":12
-            }
-
-        }
 
         plan_data = PLAN_CONFIG.get(
             plan,
             PLAN_CONFIG["starter"]
         )
 
-        payment_date = datetime.now()
-
         expiry_date = payment_date + timedelta(
-            days=
-            plan_data["months"] * 30
+            days=plan_data["months"] * 30
         )
 
         customer_id = (
             "CUST" +
-            str(
-                len(
-                    onboarding_sheet.get_all_records()
-                ) + 1
-            ).zfill(3)
+            str(count_rows("onboarding") + 1).zfill(3)
         )
 
-        existing = onboarding_sheet.get_all_records()
+        insert_row(
+            "onboarding",
+            ONBOARDING_COLUMNS,
+            {
+                "customer_id": customer_id,
+                "company_name": target.get("company_name", ""),
+                "contact_person": target.get("contact_person", ""),
+                "email": target.get("email", ""),
+                "phone": target.get("phone", ""),
+                "country": country,
+                "subscription_plan": plan.title(),
+                "subscription_amount": str(plan_data["price"]),
+                "currency": "USD",
+                "status": "Active",
+                "next_payment_date": expiry_date.strftime("%Y-%m-%d"),
+                "days_overdue": "0",
+                "payment_link": target.get("payment_link", ""),
+                "last_contact_date": "",
+                "last_message": "Payment confirmed by support",
+                "notes": "Converted from Payment Follow Up",
+                "assigned_to": target.get("assigned_to", "admin"),
+                "payment_date": payment_date.strftime("%Y-%m-%d"),
+                "expiry_date": expiry_date.strftime("%Y-%m-%d"),
+                "days_remaining": str((expiry_date - payment_date).days),
+                "subscription_duration": str(plan_data["months"]),
+                "auto_status": "Active",
+                "renewal_amount": str(plan_data["price"]),
+                "payment_stage": "Paid",
+                "payment_link_status": "Sent",
+                "payment_sent_date": payment_date.strftime("%Y-%m-%d"),
+                "payment_received_date": payment_date.strftime("%Y-%m-%d"),
+                "migration_status": "Completed",
+                "migration_date": payment_date.strftime("%Y-%m-%d"),
+                "payment_reference": target.get("payment_reference", ""),
+                "lead_id": lead_id,
+                "created_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "renewal_followup_created": "No",
+                "last_renewal_date": ""
+            }
+        )
 
-        for customer in existing:
-
-            if str(
-                customer.get(
-                    "lead_id",
-                    ""
-                )
-            ) == lead_id:
-
-                return jsonify({
-
-                    "status":"error",
-
-                    "message":
-                        "Lead already onboarded"
-
-                })
-
-        onboarding_sheet.append_row([
-
-            customer_id,
-            target.get("company_name",""),
-            target.get("contact_person",""),
-            target.get("email",""),
-            target.get("phone",""),
-            country,
-            plan.title(),
-            plan_data["price"],
-            "USD",
-            "Active",
-            expiry_date.strftime("%Y-%m-%d"),
-            0,
-            target.get("payment_link",""),
-            "",
-            "Payment confirmed by support",
-            "Converted from Payment Follow Up",
-            target.get("assigned_to","admin"),
-            payment_date.strftime("%Y-%m-%d"),
-            expiry_date.strftime("%Y-%m-%d"),
-            (expiry_date-payment_date).days,
-            plan_data["months"],
-            "Active",
-            plan_data["price"],
-            "Paid",
-            "Sent",
-            payment_date.strftime("%Y-%m-%d"),
-            payment_date.strftime("%Y-%m-%d"),
-            "Completed",
-            payment_date.strftime("%Y-%m-%d"),
-            target.get("payment_reference",""),
-            lead_id,
-            datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-
-        ])
-
-         
-
-        if delete_row:
-
-            followup_sheet.delete_rows(
-                delete_row
-            )
+        delete_by_lead_id(
+            "payment_follow_up",
+            lead_id
+        )
 
         return jsonify({
-
-            "status":"success"
-
+            "status": "success"
         })
 
     except Exception as e:
 
         return jsonify({
-
-            "status":"error",
-            "message":str(e)
-
+            "status": "error",
+            "message": str(e)
         })
-
 
 @app.route("/communications")
 @login_required
@@ -1533,7 +1238,8 @@ def dashboard_data():
         # df = pd.read_csv(
         #     CUSTOMERS_SHEET_CSV
         # )
-        onboarding = get_onboarding_sheet().get_all_records()
+        # onboarding = get_onboarding_sheet().get_all_records()
+        onboarding = get_all("onboarding")        
 
         df = pd.DataFrame(onboarding)
 
@@ -1717,83 +1423,120 @@ def settings():
 # FETCH NEXT ROW
 # =====================================
 
+# @app.route("/fetch-next-row")
+# @login_required
+# def fetch_next_row():
+
+#     try:
+
+#         logged_user = session.get(
+#             "username",
+#         ).lower()
+
+#         # df = pd.read_csv(
+#         #     GOOGLE_SHEET_CSV
+#         # )
+
+#         global cached_df
+#         cached_df = None
+
+#         df = get_sheet_data()
+
+#         df.columns = df.columns.str.lower()
+
+#         print("USER:", logged_user)
+
+#         print(
+#             df[["assign", "verified"]]
+#             .head(20)
+#         )
+
+#         print(df.columns.tolist())
+
+
+#         # FILTER USER ROWS
+
+#         user_rows = df[
+#             df["assign"].astype(str).str.lower() == logged_user
+#         ]
+
+#         user_rows = user_rows.fillna("")
+
+#         # GET POINTER
+
+#         user_rows = user_rows[
+#         user_rows["verified"]
+#         .astype(str)
+#         .str.strip()
+#         .str.lower()
+#         == "secured"
+#         ]
+
+#         print("ROWS FOUND:", len(user_rows))
+
+
+#         if len(user_rows) == 0:
+
+#             return jsonify({
+#                 "status": "finished",
+#                 "message": "No More Rows"
+#             })
+        
+#         row = user_rows.iloc[0].to_dict()
+
+#         return jsonify({
+
+#             "status":"success",
+
+#             "row":row
+
+#         })
+
+#     except Exception as e:
+
+#         return jsonify({
+
+#             "status":"error",
+
+#             "message":str(e)
+
+#         })
+
 @app.route("/fetch-next-row")
 @login_required
 def fetch_next_row():
 
     try:
 
-        logged_user = session.get(
-            "username",
-        ).lower()
+        logged_user = session.get("username", "").lower()
 
-        # df = pd.read_csv(
-        #     GOOGLE_SHEET_CSV
-        # )
-
-        global cached_df
-        cached_df = None
-
-        df = get_sheet_data()
-
-        df.columns = df.columns.str.lower()
-
-        print("USER:", logged_user)
-
-        print(
-            df[["assign", "verified"]]
-            .head(20)
+        row = select_one(
+            "data_operations",
+            """
+            lower(assign) = ?
+            AND lower(verified) IN ('secured', 'no', '')
+            """,
+            [logged_user],
+            order_by="CAST(id AS INTEGER) ASC"
         )
 
-        print(df.columns.tolist())
-
-
-        # FILTER USER ROWS
-
-        user_rows = df[
-            df["assign"].astype(str).str.lower() == logged_user
-        ]
-
-        user_rows = user_rows.fillna("")
-
-        # GET POINTER
-
-        user_rows = user_rows[
-        user_rows["verified"]
-        .astype(str)
-        .str.strip()
-        .str.lower()
-        == "secured"
-        ]
-
-        print("ROWS FOUND:", len(user_rows))
-
-
-        if len(user_rows) == 0:
+        if not row:
 
             return jsonify({
                 "status": "finished",
-                "message": "No More Rows"
+                "message": "No More Assigned Rows"
             })
-        
-        row = user_rows.iloc[0].to_dict()
 
         return jsonify({
-
-            "status":"success",
-
-            "row":row
-
+            "status": "success",
+            "row": row
         })
 
     except Exception as e:
 
         return jsonify({
-
-            "status":"error",
-
-            "message":str(e)
-
+            "status": "error",
+            "message": str(e)
         })
 
 
@@ -1804,6 +1547,86 @@ def fetch_next_row():
 # SAVE VERIFIED
 # =====================================
 
+# @app.route("/save-verified", methods=["POST"])
+# @login_required
+# def save_verified():
+
+#     try:
+
+#         data = request.json
+
+#         data["verified_by"] = session.get(
+#             "username"
+#         )
+
+#         all_data.append(
+#             data
+#         )
+
+#         return jsonify({
+
+#             "status":"success"
+
+#         })
+
+#     except Exception as e:
+
+#         return jsonify({
+
+#             "status":"error",
+
+#             "message":str(e)
+
+#         })
+
+# # =====================================
+# # EXPORT
+# # =====================================
+
+# @app.route("/export-excel")
+# @login_required
+# def export_excel():
+
+#     logged_user = session.get(
+#         "username"
+#     )
+
+#     export_rows = []
+
+#     for row in all_data:
+
+#         if row.get(
+#             "verified_by"
+#         ) == logged_user:
+
+#             export_rows.append(
+#                 row
+#             )
+
+#     if len(export_rows) == 0:
+
+#         return "No Verified Data"
+
+#     df = pd.DataFrame(
+#         export_rows
+#     )
+
+#     file_name = f"{logged_user}_verified.xlsx"
+
+#     df.to_excel(
+
+#         file_name,
+
+#         index=False
+#     )
+
+#     return send_file(
+
+#         file_name,
+
+#         as_attachment=True
+#     )
+
 @app.route("/save-verified", methods=["POST"])
 @login_required
 def save_verified():
@@ -1812,77 +1635,46 @@ def save_verified():
 
         data = request.json
 
-        data["verified_by"] = session.get(
-            "username"
+        row_id = str(data.get("id", "")).strip()
+
+        if not row_id:
+
+            return jsonify({
+                "status": "error",
+                "message": "Missing row id"
+            })
+
+        updates = {}
+
+        for col in DATA_OPERATIONS_COLUMNS:
+
+            if col == "id":
+                continue
+
+            if col in data:
+                updates[col] = str(data.get(col, ""))
+
+        updates["verified"] = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
         )
 
-        all_data.append(
-            data
+        update(
+            "data_operations",
+            updates,
+            "id = ?",
+            [row_id]
         )
 
         return jsonify({
-
-            "status":"success"
-
+            "status": "success"
         })
 
     except Exception as e:
 
         return jsonify({
-
-            "status":"error",
-
-            "message":str(e)
-
+            "status": "error",
+            "message": str(e)
         })
-
-# =====================================
-# EXPORT
-# =====================================
-
-@app.route("/export-excel")
-@login_required
-def export_excel():
-
-    logged_user = session.get(
-        "username"
-    )
-
-    export_rows = []
-
-    for row in all_data:
-
-        if row.get(
-            "verified_by"
-        ) == logged_user:
-
-            export_rows.append(
-                row
-            )
-
-    if len(export_rows) == 0:
-
-        return "No Verified Data"
-
-    df = pd.DataFrame(
-        export_rows
-    )
-
-    file_name = f"{logged_user}_verified.xlsx"
-
-    df.to_excel(
-
-        file_name,
-
-        index=False
-    )
-
-    return send_file(
-
-        file_name,
-
-        as_attachment=True
-    )
 
 
 @app.route("/payments")
@@ -1951,10 +1743,93 @@ def payments_data():
         )
     )
 
-@app.route(
-    "/update-sheet-row",
-    methods=["POST"]
-)
+# @app.route(
+#     "/update-sheet-row",
+#     methods=["POST"]
+# )
+# @login_required
+# def update_sheet_row():
+
+#     try:
+
+#         data = request.json
+
+#         data["verified"] = datetime.now().strftime(
+#             "%Y-%m-%d %H:%M:%S"
+#         )
+
+#         row_id = str(
+#             data.get("id")
+#         )
+
+   
+
+#         sheet = get_main_sheet()
+
+#         records = sheet.get_all_records()
+
+#         target_row = None
+
+#         for index, row in enumerate(records):
+
+#             if str(row.get("id")) == row_id:
+
+#                 target_row = index + 2
+
+#                 break
+
+#         if not target_row:
+
+#             return jsonify({
+
+#                 "status":"error",
+
+#                 "message":"Row not found"
+
+#             })
+
+#         headers = sheet.row_values(1)
+
+#         updates = []
+
+#         for col_index, header in enumerate(headers):
+
+#             value = data.get(
+#                 header,
+#                 ""
+#             )
+
+#             updates.append({
+#                 "range":
+#                     gspread.utils.rowcol_to_a1(
+#                         target_row,
+#                         col_index + 1
+#                     ),
+#                 "values":
+#                     [[str(value)]]
+#             })
+
+#         sheet.batch_update(updates)
+#         global cached_df
+#         cached_df = None
+#         return jsonify({
+
+#             "status":"success"
+
+#         })
+
+#     except Exception as e:
+
+#         return jsonify({
+
+#             "status":"error",
+
+#             "message":str(e)
+
+#         })
+    
+
+@app.route("/update-sheet-row", methods=["POST"])
 @login_required
 def update_sheet_row():
 
@@ -1962,175 +1837,217 @@ def update_sheet_row():
 
         data = request.json
 
-        data["verified"] = datetime.now().strftime(
+        row_id = str(data.get("id", "")).strip()
+
+        if not row_id:
+
+            return jsonify({
+                "status": "error",
+                "message": "Missing row id"
+            })
+
+        allowed_updates = {}
+
+        for col in DATA_OPERATIONS_COLUMNS:
+
+            if col == "id":
+                continue
+
+            if col in data:
+                allowed_updates[col] = str(data.get(col, ""))
+
+        allowed_updates["verified"] = datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         )
 
-        row_id = str(
-            data.get("id")
+        update(
+            "data_operations",
+            allowed_updates,
+            "id = ?",
+            [row_id]
         )
 
-   
-
-        sheet = get_main_sheet()
-
-        records = sheet.get_all_records()
-
-        target_row = None
-
-        for index, row in enumerate(records):
-
-            if str(row.get("id")) == row_id:
-
-                target_row = index + 2
-
-                break
-
-        if not target_row:
-
-            return jsonify({
-
-                "status":"error",
-
-                "message":"Row not found"
-
-            })
-
-        headers = sheet.row_values(1)
-
-        updates = []
-
-        for col_index, header in enumerate(headers):
-
-            value = data.get(
-                header,
-                ""
-            )
-
-            updates.append({
-                "range":
-                    gspread.utils.rowcol_to_a1(
-                        target_row,
-                        col_index + 1
-                    ),
-                "values":
-                    [[str(value)]]
-            })
-
-        sheet.batch_update(updates)
-        global cached_df
-        cached_df = None
         return jsonify({
-
-            "status":"success"
-
+            "status": "success"
         })
 
     except Exception as e:
 
         return jsonify({
-
-            "status":"error",
-
-            "message":str(e)
-
+            "status": "error",
+            "message": str(e)
         })
-    
-@app.route(
-    "/run-query",
-    methods=["POST"]
-)
+
+
+# @app.route(
+#     "/run-query",
+#     methods=["POST"]
+# )
+# @login_required
+# def run_query():
+
+#     try:
+
+#         query = request.json.get(
+#             "query"
+#         )
+
+#         df = get_sheet_data()
+
+#         result = sqldf(
+#             query,
+#             {
+#                 "data": df
+#             }
+#         )
+
+#         return jsonify({
+
+#             "status":"success",
+
+#             "rows":
+#                 result.fillna("")
+#                 .to_dict(
+#                     orient="records"
+#                 )
+
+#         })
+
+#     except Exception as e:
+
+#         return jsonify({
+
+#             "status":"error",
+
+#             "message":str(e)
+
+#         })
+
+@app.route("/run-query", methods=["POST"])
 @login_required
 def run_query():
 
     try:
 
-        query = request.json.get(
-            "query"
-        )
+        query = request.json.get("query", "").strip()
 
-        df = get_sheet_data()
+        if not query.lower().startswith("select"):
+
+            return jsonify({
+                "status": "error",
+                "message": "Only SELECT queries are allowed"
+            })
+
+        df = pd.DataFrame(
+            get_all("data_operations")
+        )
 
         result = sqldf(
             query,
             {
-                "data": df
+                "data": df,
+                "data_operations": df
             }
         )
 
         return jsonify({
-
-            "status":"success",
-
-            "rows":
-                result.fillna("")
-                .to_dict(
-                    orient="records"
-                )
-
+            "status": "success",
+            "rows": result.fillna("").to_dict(orient="records")
         })
 
     except Exception as e:
 
         return jsonify({
-
-            "status":"error",
-
-            "message":str(e)
-
+            "status": "error",
+            "message": str(e)
         })
-    
+
+# @app.route("/verification-stats")
+# @login_required
+# def verification_stats():
+
+#     df = get_sheet_data()
+
+#     df.columns = (
+#         df.columns
+#         .str.lower()
+#         .str.strip()
+#     )
+
+#     today = datetime.now().strftime(
+#         "%Y-%m-%d"
+#     )
+
+#     df = df.fillna("")
+
+#     maricar = len(
+#         df[
+#             (df["assign"].str.lower() == "maricar")
+#             &
+#             (
+#                 df["verified"]
+#                 .astype(str)
+#                 .str.startswith(today)
+#             )
+#         ]
+#     )
+
+#     maureene = len(
+#         df[
+#             (df["assign"].str.lower() == "maureene")
+#             &
+#             (
+#                 df["verified"]
+#                 .astype(str)
+#                 .str.startswith(today)
+#             )
+#         ]
+#     )
+
+#     return jsonify({
+
+#         "maricar": maricar,
+
+#         "maureene": maureene
+
+#     })
 
 @app.route("/verification-stats")
 @login_required
 def verification_stats():
 
-    df = get_sheet_data()
+    try:
 
-    df.columns = (
-        df.columns
-        .str.lower()
-        .str.strip()
-    )
+        today = datetime.now().strftime("%Y-%m-%d")
 
-    today = datetime.now().strftime(
-        "%Y-%m-%d"
-    )
+        rows = get_all("data_operations")
 
-    df = df.fillna("")
+        maricar = 0
+        maureene = 0
 
-    maricar = len(
-        df[
-            (df["assign"].str.lower() == "maricar")
-            &
-            (
-                df["verified"]
-                .astype(str)
-                .str.startswith(today)
-            )
-        ]
-    )
+        for row in rows:
 
-    maureene = len(
-        df[
-            (df["assign"].str.lower() == "maureene")
-            &
-            (
-                df["verified"]
-                .astype(str)
-                .str.startswith(today)
-            )
-        ]
-    )
+            assign = str(row.get("assign", "")).lower()
+            verified = str(row.get("verified", ""))
 
-    return jsonify({
+            if verified.startswith(today):
 
-        "maricar": maricar,
+                if assign == "maricar":
+                    maricar += 1
 
-        "maureene": maureene
+                elif assign == "maureene":
+                    maureene += 1
 
-    })
+        return jsonify({
+            "maricar": maricar,
+            "maureene": maureene
+        })
 
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        })
 
 @app.route("/close-ticket", methods=["POST"])
 @login_required
@@ -2238,20 +2155,26 @@ def communications_v2_data():
 
     try:
 
-        onboarding = (
-            get_onboarding_sheet()
-            .get_all_records()
-        )
+        # onboarding = (
+        #     get_onboarding_sheet()
+        #     .get_all_records()
+        # )
 
-        followups = (
-            get_followup_sheet()
-            .get_all_records()
-        )
+        # followups = (
+        #     get_followup_sheet()
+        #     .get_all_records()
+        # )
 
-        communications = (
-        get_communications_sheet()
-        .get_all_records()
-        ) 
+        onboarding = get_all("onboarding")
+
+        followups = get_all("payment_follow_up")
+
+        # communications = (
+        # get_communications_sheet()
+        # .get_all_records()
+        # ) 
+
+        communications = get_all("communications")
 
         conversation_lookup = {}
 
@@ -2531,9 +2454,14 @@ def conversation(lead_id):
 
     try:
 
-        sheet = get_communications_sheet()
+        # sheet = get_communications_sheet()
 
-        rows = sheet.get_all_records()
+        # rows = sheet.get_all_records()
+
+        rows = find_by_lead_id_all(
+            "communications",
+            lead_id
+        )
 
         messages = []
 
@@ -2594,122 +2522,51 @@ def send_message():
 
         data = request.json
 
-        # print(data)
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        sheet = get_communications_sheet()
+        message_id = "MSG" + now.replace("-", "").replace(":", "").replace(" ", "")
 
-        now = datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-
-        message_id = "MSG" + now.replace(
-            "-",
-            ""
-        ).replace(
-            ":",
-            ""
-        ).replace(
-            " ",
-            ""
+        records = find_by_lead_id_all(
+            "communications",
+            data.get("lead_id", "")
         )
 
         conversation_id = ""
 
-        records = sheet.get_all_records()
+        if len(records) > 0:
+            conversation_id = records[-1].get("conversation_id", "")
 
-        for row in records:
-
-            if row.get("lead_id") == data.get("lead_id"):
-
-                conversation_id = row.get(
-                    "conversation_id",
-                    ""
-                )
-
-                break
         if conversation_id == "":
-
             conversation_id = "CONV" + datetime.now().strftime("%Y%m%d%H%M%S")
 
-        sheet.append_row([
-
-            conversation_id,
-
-            message_id,
-
-            data.get(
-                "customer_id",
-                ""
-            ),
-
-            data.get(
-                "lead_id",
-                ""
-            ),
-
-            data.get(
-                "company_name",
-                ""
-            ),
-
-            data.get(
-                "customer_name",
-                ""
-            ),
-
-            data.get(
-                "customer_email",
-                ""
-            ),
-
-            data.get(
-                "customer_phone",
-                ""
-            ),
-
-            "Agent",
-
-            "Manual",
-
-            "",
-
-            data.get(
-                "message",
-                ""
-            ),
-
-            "",
-
-            "Open",
-
-            "Medium",
-
-            session.get(
-                "username",
-                "Admin"
-            ),
-
-            "Dashboard",
-
-            now,
-
-            "Read",
-
-            "",
-
-            "",
-
-            data.get(
-                "payment_status",
-                ""
-            ),
-
-            data.get(
-                "dataset_status",
-                ""
-            )
-
-        ])
+        insert(
+            "communications",
+            {
+                "conversation_id": conversation_id,
+                "message_id": message_id,
+                "customer_id": data.get("customer_id", ""),
+                "lead_id": data.get("lead_id", ""),
+                "company_name": data.get("company_name", ""),
+                "customer_name": data.get("customer_name", ""),
+                "customer_email": data.get("customer_email", ""),
+                "customer_phone": data.get("customer_phone", ""),
+                "sender": "Agent",
+                "message_type": "Manual",
+                "subject": "",
+                "message": data.get("message", ""),
+                "attachment": "",
+                "status": "Open",
+                "priority": "Medium",
+                "assigned_to": session.get("username", "Admin"),
+                "source": "Dashboard",
+                "created_at": now,
+                "read_status": "Read",
+                "replied_at": "",
+                "action_required": "",
+                "payment_status": data.get("payment_status", ""),
+                "dataset_status": data.get("dataset_status", "")
+            }
+        )
 
         customer_ai_sheet = get_customer_ai_sheet()
 
@@ -2744,21 +2601,15 @@ def send_message():
                 break
 
         return jsonify({
-
-            "status":"success",
-
-            "created_at":now
-
+            "status": "success",
+            "created_at": now
         })
 
     except Exception as e:
 
         return jsonify({
-
-            "status":"error",
-
-            "message":str(e)
-
+            "status": "error",
+            "message": str(e)
         })
     
 @app.route("/communications-dashboard")
@@ -2779,9 +2630,11 @@ def communications_dashboard():
 
     try:
 
-        sheet = get_communications_sheet()
+        # sheet = get_communications_sheet()
 
-        rows = sheet.get_all_records()
+        # rows = sheet.get_all_records()
+
+        rows = get_all("communications")
 
         conversation_ids = set()
 
@@ -2980,27 +2833,35 @@ def current_user():
 
     })
 
+# @app.route("/mark-conversation-read/<lead_id>", methods=["POST"])
+# @login_required
+# def mark_conversation_read(lead_id):
+
+#     sheet = get_communications_sheet()
+
+#     records = sheet.get_all_records()
+
+#     for i, row in enumerate(records, start=2):
+
+#         if (
+#             str(row.get("lead_id")) == str(lead_id)
+#             and row.get("sender", "").lower() == "customer"
+#             and row.get("read_status", "").lower() == "unread"
+#         ):
+
+#             sheet.update_cell(i, 19, "Read")
+
+#     return jsonify({"success": True})
+
 @app.route("/mark-conversation-read/<lead_id>", methods=["POST"])
 @login_required
 def mark_conversation_read(lead_id):
 
-    sheet = get_communications_sheet()
-
-    records = sheet.get_all_records()
-
-    for i, row in enumerate(records, start=2):
-
-        if (
-            str(row.get("lead_id")) == str(lead_id)
-            and row.get("sender", "").lower() == "customer"
-            and row.get("read_status", "").lower() == "unread"
-        ):
-
-            sheet.update_cell(i, 19, "Read")
+    mark_messages_read_by_lead_id(
+        lead_id
+    )
 
     return jsonify({"success": True})
-
-
 
 
 @app.route("/resolve-conversation", methods=["POST"])
@@ -3020,49 +2881,60 @@ def resolve_conversation():
         # Update Communications status
         #
 
-        communication_sheet = get_communications_sheet()
-        communication_rows = communication_sheet.get_all_records()
+        # communication_sheet = get_communications_sheet()
+        # communication_rows = communication_sheet.get_all_records()
 
-        for i, row in enumerate(communication_rows, start=2):
+        # for i, row in enumerate(communication_rows, start=2):
 
-            if str(row.get("lead_id", "")) == str(lead_id):
+        #     if str(row.get("lead_id", "")) == str(lead_id):
 
-                row["status"] = "Resolved"
-                row["replied_at"] = now
-                row["action_required"] = "No"
+        #         row["status"] = "Resolved"
+        #         row["replied_at"] = now
+        #         row["action_required"] = "No"
 
-                communication_sheet.update(
-                    f"A{i}:W{i}",
-                    [[
-                        row.get("conversation_id", ""),
-                        row.get("message_id", ""),
-                        row.get("customer_id", ""),
-                        row.get("lead_id", ""),
-                        row.get("company_name", ""),
-                        row.get("customer_name", ""),
-                        row.get("customer_email", ""),
-                        row.get("customer_phone", ""),
-                        row.get("sender", ""),
-                        row.get("message_type", ""),
-                        row.get("subject", ""),
-                        row.get("message", ""),
-                        row.get("attachment", ""),
-                        row.get("status", ""),
-                        row.get("priority", ""),
-                        row.get("assigned_to", ""),
-                        row.get("source", ""),
-                        row.get("created_at", ""),
-                        row.get("read_status", ""),
-                        row.get("replied_at", ""),
-                        row.get("action_required", ""),
-                        row.get("payment_status", ""),
-                        row.get("dataset_status", "")
-                    ]]
-                )
+        #         communication_sheet.update(
+        #             f"A{i}:W{i}",
+        #             [[
+        #                 row.get("conversation_id", ""),
+        #                 row.get("message_id", ""),
+        #                 row.get("customer_id", ""),
+        #                 row.get("lead_id", ""),
+        #                 row.get("company_name", ""),
+        #                 row.get("customer_name", ""),
+        #                 row.get("customer_email", ""),
+        #                 row.get("customer_phone", ""),
+        #                 row.get("sender", ""),
+        #                 row.get("message_type", ""),
+        #                 row.get("subject", ""),
+        #                 row.get("message", ""),
+        #                 row.get("attachment", ""),
+        #                 row.get("status", ""),
+        #                 row.get("priority", ""),
+        #                 row.get("assigned_to", ""),
+        #                 row.get("source", ""),
+        #                 row.get("created_at", ""),
+        #                 row.get("read_status", ""),
+        #                 row.get("replied_at", ""),
+        #                 row.get("action_required", ""),
+        #                 row.get("payment_status", ""),
+        #                 row.get("dataset_status", "")
+        #             ]]
+        #         )
 
         #
         # Close CustomerAI conversation
         #
+
+        update(
+            "communications",
+            {
+                "status": "Resolved",
+                "replied_at": now,
+                "action_required": "No"
+            },
+            "lead_id = ?",
+            [str(lead_id)]
+        )
 
         ai_sheet = get_customer_ai_sheet()
         ai_rows = ai_sheet.get_all_records()
@@ -3113,35 +2985,36 @@ def resolve_conversation():
 def create_support_task():
 
     try:
-        data = request.json
 
-        sheet = get_support_tasks_sheet()
+        data = request.json
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         task_id = "TASK" + datetime.now().strftime("%Y%m%d%H%M%S")
 
-        sheet.append_row([
-
-            task_id,
-            data.get("conversation_id", ""),
-            data.get("customer_id", ""),
-            data.get("lead_id", ""),
-            data.get("company_name", ""),
-            data.get("customer_name", ""),
-            data.get("customer_email", ""),
-            data.get("assigned_to", ""),
-            data.get("task_title", ""),
-            data.get("task_description", ""),
-            data.get("priority", "Medium"),
-            "Open",
-            session.get("username", "Admin"),
-            now,
-            data.get("due_date", ""),
-            "",
-            data.get("notes", "")
-
-        ])
+        insert_row(
+            "support_tasks",
+            SUPPORT_TASKS_COLUMNS,
+            {
+                "task_id": task_id,
+                "conversation_id": data.get("conversation_id", ""),
+                "customer_id": data.get("customer_id", ""),
+                "lead_id": data.get("lead_id", ""),
+                "company_name": data.get("company_name", ""),
+                "customer_name": data.get("customer_name", ""),
+                "customer_email": data.get("customer_email", ""),
+                "assigned_to": data.get("assigned_to", ""),
+                "task_title": data.get("task_title", ""),
+                "task_description": data.get("task_description", ""),
+                "priority": data.get("priority", "Medium"),
+                "status": "Open",
+                "created_by": session.get("username", "Admin"),
+                "created_at": now,
+                "due_date": data.get("due_date", ""),
+                "resolved_at": "",
+                "notes": data.get("notes", "")
+            }
+        )
 
         return jsonify({
             "status": "success",
@@ -3149,10 +3022,116 @@ def create_support_task():
         })
 
     except Exception as e:
+
         return jsonify({
             "status": "error",
             "message": str(e)
         })
+    
+@app.route("/import-data-file", methods=["POST"])
+@login_required
+def import_data_file():
+
+    try:
+
+        if "file" not in request.files:
+            return jsonify({
+                "status": "error",
+                "message": "No file uploaded"
+            })
+
+        file = request.files["file"]
+
+        if file.filename == "":
+            return jsonify({
+                "status": "error",
+                "message": "No file selected"
+            })
+
+        upload_folder = "uploads"
+
+        os.makedirs(upload_folder, exist_ok=True)
+
+        filename = secure_filename(file.filename)
+
+        filepath = os.path.join(upload_folder, filename)
+
+        file.save(filepath)
+
+        if filename.lower().endswith(".csv"):
+
+            df = pd.read_csv(filepath)
+
+        elif filename.lower().endswith((".xlsx", ".xls")):
+
+            df = pd.read_excel(filepath)
+
+        else:
+
+            return jsonify({
+                "status": "error",
+                "message": "Only CSV or Excel supported."
+            })
+
+        df.columns = [
+            str(c).strip()
+            for c in df.columns
+        ]
+
+        next_id = get_next_numeric_id("data_operations")
+
+        imported = 0
+
+        for _, row in df.iterrows():
+
+            data = {}
+
+            for col in DATA_OPERATIONS_COLUMNS:
+
+                if col == "id":
+
+                    data[col] = str(next_id)
+
+                # elif col == "assign":
+
+                #     data[col] = ""
+
+                elif col == "verified":
+
+                    data[col] = "secured"
+
+                else:
+
+                    data[col] = str(
+                        row.get(col, "")
+                    ).strip()
+
+            insert(
+                "data_operations",
+                data
+            )
+
+            imported += 1
+            next_id += 1
+
+        return jsonify({
+
+            "status": "success",
+
+            "rows_imported": imported
+
+        })
+
+    except Exception as e:
+
+        return jsonify({
+
+            "status": "error",
+
+            "message": str(e)
+
+        })
+
 # =====================================
 # LOGOUT
 # =====================================
