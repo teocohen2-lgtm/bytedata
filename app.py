@@ -471,7 +471,7 @@ if not scheduler.running:
     print("Scheduler Started")
 
 
-
+    
 
 
 all_data = []
@@ -3096,11 +3096,11 @@ def import_data_file():
                 if col == "id":
                     data[col] = str(next_id)
 
-                elif col == "assign":
-                    data[col] = ""
+                # elif col == "assign":
+                #     data[col] = ""
 
                 elif col == "verified":
-                    data[col] = "No"
+                    data[col] = "secured"
 
                 else:
                     data[col] = str(row.get(col, "")).strip()
