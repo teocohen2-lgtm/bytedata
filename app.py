@@ -580,9 +580,10 @@ scheduler.add_job(
 scheduler.add_job(
     process_customer_renewals,
     "interval",
-    hours=4,
+    minutes=5,
     id="process_customer_renewals",
-    replace_existing=True
+    replace_existing=True,
+    next_run_time=datetime.now()
 )
 
 scheduler.add_job(
