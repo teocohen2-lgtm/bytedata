@@ -72,9 +72,9 @@ SCOPES = [
 
 creds = Credentials.from_service_account_file(
 
-    # "credentials.json",
+    "credentials.json",
 
-    "/etc/secrets/credentials.json",
+    # "/etc/secrets/credentials.json",
 
     scopes=SCOPES
 
@@ -588,7 +588,7 @@ scheduler.add_job(
 scheduler.add_job(
     customer_ai.process_customer_ai,
     "interval",
-    minutes=3,
+    seconds=30,
     id="customer_ai",
     replace_existing=True
 )

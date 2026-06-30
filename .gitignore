@@ -1,2 +1,4 @@
 credentials.json
 .envcredentials.json
+env
+.env
