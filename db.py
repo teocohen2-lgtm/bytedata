@@ -79,7 +79,15 @@ DATA_OPERATIONS_COLUMNS = [
     "supplier_trust_score",
     "estimated_profit_margin",
     "container_capacity_units",
-    "avg_delivery_delay_days",
+    "avg_delivery_def get_conn():
+    conn = sqlite3.connect(
+        DB_PATH,
+        timeout=30,
+        check_same_thread=False
+    )
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=30000;")
+    return conndelay_days",
     "assign",
     "verified"
 ]
@@ -105,7 +113,7 @@ def get_conn():
     )
     conn.row_factory = sqlite3.Row
 
-    conn.execute("PRAGMA journal_mode=WAL;")
+    # conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout=30000;")
 
     return conn
