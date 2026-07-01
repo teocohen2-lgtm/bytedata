@@ -2264,7 +2264,11 @@ def communications_v2_data():
                         "email",
                         ""
                     ),
-
+                "country":
+                    row.get(
+                        "country",
+                        ""
+                        ),
                 "phone":
                     row.get(
                         "phone",
